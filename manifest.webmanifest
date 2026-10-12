@@ -1,0 +1,16 @@
+{
+  "name": "Duckcellent",
+  "short_name": "Duckcellent",
+  "description": "Mark the countries you have been to, plan trips, and keep every flight and stay in one place.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#EBF0EF",
+  "theme_color": "#0B7A75",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

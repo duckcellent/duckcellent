@@ -46,3 +46,13 @@ To make it a real subscription product you still need customer accounts, a datab
 - Country outlines come from the public-domain world.geo.json dataset (simplified, so borders are approximate).
 - The airport list is hand-written (about 465 major airports) and may be incomplete. Any 3-letter airport code
   can still be typed in.
+
+## Installing it as an app (PWA)
+
+The site is installable. After it is live on Vercel:
+- iPhone: open it in Safari, tap Share, then "Add to Home Screen".
+- Android: open it in Chrome, tap the menu, then "Install app".
+- Desktop: Chrome or Edge shows an install icon in the address bar.
+
+It opens full screen with the duck icon and works offline after the first visit.
+To roll out an update, change the `CACHE` name in `sw.js` (for example `duckcellent-v2`).
