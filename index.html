@@ -22,6 +22,7 @@ img{max-width:100%}
 </style>
 </head>
 <body>
+<title>Duckcellent</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
@@ -263,6 +264,23 @@ table.cmp tr:last-child td{border-bottom:0}
 .lead{max-width:60ch;color:var(--muted);margin:6px 0 18px}
 .foot{margin-top:36px;font-size:12px;color:var(--muted);max-width:70ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* accounts */
+input[type=email],input[type=password]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;color:var(--ink)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(420px,calc(100vw - 32px));box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(10,20,25,.55)}
+.dlgbody{position:relative;padding:22px}
+.dlgbody h2{font-size:24px;padding-right:36px}
+.dlgbody form{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.dlgbody .dlgx{position:absolute;right:14px;top:14px}
+.dlgbody .linksrow{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px}
+.dlgbody .stack{display:flex;flex-direction:column;gap:8px}
+.dlgbody .dangerzone{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
+.dlgbody .err:empty{display:none}
+.dlgbody .err{margin-top:0}
+.okmsg{color:var(--accent);font-size:13px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:70;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;max-width:min(92vw,520px);box-shadow:var(--shadow)}
+.who .btn.sm{white-space:nowrap}
 </style>
 
 <header class="top"><div class="wrap">
@@ -275,7 +293,7 @@ table.cmp tr:last-child td{border-bottom:0}
     <button class="tab" role="tab" data-view="trips" aria-selected="false">Trips</button>
     <button class="tab" role="tab" data-view="plans" aria-selected="false">Membership</button>
   </nav>
-  <div class="who"><span class="savestate" id="saveState" role="status"></span><button class="badge" id="planBadge" data-act="goPlans">Free</button></div>
+  <div class="who"><span class="savestate" id="saveState" role="status"></span><button class="badge" id="planBadge" data-act="goPlans">Free</button><button class="btn ghost sm" id="acctBtn" data-act="account" hidden>Sign in</button></div>
 </div></header>
 
 <main class="wrap">
@@ -319,8 +337,10 @@ table.cmp tr:last-child td{border-bottom:0}
   <!-- MEMBERSHIP -->
   <section id="view-plans" aria-label="Membership" hidden></section>
 
-  <p class="foot">Prototype build. Plans, prices and limits are placeholders and no payment is taken. Country outlines are simplified public-domain data, so borders are approximate and disputed areas are not shown.</p>
+  <p class="foot">Country outlines are simplified public-domain data, so borders are approximate and disputed areas are not shown.</p>
 </main>
+<dialog id="dlg" aria-labelledby="dlgTitle"><div class="dlgbody" id="dlgBody"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
 (function(){
@@ -820,14 +840,14 @@ GEO|Cheddi Jagan International Airport|Georgetown|Guyana
 PBM|Johan Adolf Pengel International Airport|Paramaribo|Suriname`;
 
 /* ---------- placeholders you can change ---------- */
-const FREE_COUNTRIES=10, FREE_TRIPS=1;
-const PLANS=[
+let FREE_COUNTRIES=10, FREE_TRIPS=1;
+let PLANS=[
   {id:'monthly',  label:'Monthly',        months:1,  price:4.99,  unit:'month'},
   {id:'quarterly',label:'Every 3 months', months:3,  price:12.99, unit:'3 months'},
   {id:'biannual', label:'Every 6 months', months:6,  price:23.99, unit:'6 months'},
   {id:'yearly',   label:'Yearly',         months:12, price:39.99, unit:'year'}
 ];
-const PLAN_CCY='USD';
+let PLAN_CCY='USD';
 const KEY='waymark.v1';
 
 /* ---------- helpers ---------- */
@@ -975,17 +995,17 @@ const SOV_TOTAL=Object.values(C).filter(c=>!c.terr).length;
 const ST={been:'Been',lived:'Lived here',wish:'Want to go'};
 
 /* ---------- state ---------- */
-let S={visited:{},plan:null,trips:[],example:false,persisted:false};
+let S={visited:{},trips:[],example:false};
 let ready=false, sel=null, sheetMsg=null, view='atlas';
 const T={id:null,tab:'itinerary',editing:null,notice:false,confirmDel:false};
-const P={sel:'yearly',confirm:false,cancel:false};
+const P={sel:'yearly',confirm:false,busy:false,err:'',after:null};
 const openConts=new Set();
 
 function sample(){
   const v=(s,y,n)=>({s,y:y||null,n:n||''});
   return {
     visited:{AUS:v('lived'),NZL:v('been',2019),JPN:v('been',2018,'Kyoto in autumn'),THA:v('been',2017),SGP:v('been',2016),USA:v('been',2015),FRA:v('been',2022),ITA:v('been',2023),PRT:v('wish'),ISL:v('wish'),PER:v('wish'),NOR:v('wish')},
-    plan:null,example:true,persisted:false,
+    example:true,
     trips:[{id:'ex1',name:'Portugal in spring',start:'2027-04-10',end:'2027-04-19',currency:'USD',countries:['PRT'],
       itinerary:[
         {id:'i1',date:'2027-04-11',time:'09:30',title:'Pastéis de Belém',place:'Belém',cat:'Food',notes:'Go early to beat the queue'},
@@ -1004,74 +1024,466 @@ function sample(){
   };
 }
 
-/* ---------- storage ---------- */
-const store={mode:'memory',db:null,uid:null,chain:Promise.resolve(),timers:{},state:'idle'};
+/* ---------- storage: this browser (guest) or the signed-in account ---------- */
+const store={mode:'memory',chain:Promise.resolve(),timers:{},state:'idle',run:0,waiting:new Set(),dirty:new Map(),retry:0,blocked:false,flushing:false,ft:null};
+const A={cfg:null,session:null,user:null,pendingReset:false,justConfirmed:false};
+let SUB=null; /* membership as the server sees it: {plus,plan,status,current_period_end,cancel_at_period_end,has_customer} */
+const AUTHKEY='duckcellent.auth.v1', CFGKEY='duckcellent.cfg.v1';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const stripId=t=>{const o=clone(t);delete o.id;return o;};
+function deepEq(a,b){
+  if(a===b)return true;
+  if(typeof a!=='object'||typeof b!=='object'||!a||!b)return false;
+  if(Array.isArray(a)!==Array.isArray(b))return false;
+  const ka=Object.keys(a),kb=Object.keys(b);
+  if(ka.length!==kb.length)return false;
+  for(const k of ka){if(!Object.prototype.hasOwnProperty.call(b,k)||!deepEq(a[k],b[k]))return false;}
+  return true;
+}
+
+let toastT=null;
+function toast(msg,ms){
+  const el=$('#toast');if(!el)return;
+  el.textContent=msg;el.hidden=false;
+  clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true;},ms||5000);
+}
+
 function setSave(st){
   store.state=st;
   const el=$('#saveState'); if(!el)return;
   const where=store.mode==='cloud'?'your account':store.mode==='local'?'this browser':'';
-  el.textContent=st==='saving'?'Saving…':st==='error'?'Could not save. Changes are on screen only.':(where?'Saved to '+where:'Not saved. Sign in to keep your data.');
+  el.textContent=st==='saving'?'Saving…':st==='offline'?'Offline. Changes will sync when you are back online.':st==='error'?(store.blocked?'Could not load your data.':'Could not save yet. Trying again…'):(where?'Saved to '+where:'Not saved. Sign in to keep your data.');
 }
-store.run=0;store.waiting=new Set();
-function settle(){if(!store.run&&!store.waiting.size&&store.state!=='error')setSave('idle');}
+function settle(){if(!store.run&&!store.waiting.size&&store.state!=='error'&&store.state!=='offline')setSave('idle');}
 function enqueue(fn){store.run++;store.chain=store.chain.then(fn).catch(e=>{console.warn('save failed',e);setSave('error');}).then(()=>{store.run--;settle();});}
 function later(key,fn){setSave('saving');store.waiting.add(key);clearTimeout(store.timers[key]);store.timers[key]=setTimeout(()=>{store.waiting.delete(key);enqueue(fn);},500);}
-const pdoc=()=>store.db.doc('data/users/'+store.uid+'/profile');
-const tdoc=id=>pdoc().collection('trips').doc(id);
-const stripId=t=>{const o=clone(t);delete o.id;return o;};
-async function ensurePersisted(){
-  if(store.mode!=='cloud'||S.persisted)return;
-  await pdoc().set({visited:S.visited,plan:S.plan,example:S.example,updatedAt:Date.now()});
-  for(const t of S.trips) await tdoc(t.id).set(stripId(t));
-  S.persisted=true;
+
+/* ----- shape of saved data ----- */
+const guestShape=()=>({visited:S.visited,trips:S.trips,example:S.example});
+function normState(d){
+  const o={visited:(d&&d.visited&&typeof d.visited==='object'&&!Array.isArray(d.visited))?d.visited:{},example:!!(d&&d.example),trips:[]};
+  for(const t of ((d&&d.trips)||[])){
+    if(!t||!t.id)continue;
+    const n=Object.assign({name:'',start:'',end:'',currency:'USD',countries:[],itinerary:[],flights:[],stays:[]},t);
+    for(const k of ['countries','itinerary','flights','stays'])if(!Array.isArray(n[k]))n[k]=[];
+    o.trips.push(n);
+  }
+  return o;
 }
-function saveProfile(){
-  if(store.mode==='local'){later('local',async()=>{localStorage.setItem(KEY,JSON.stringify(S));});return;}
-  if(store.mode!=='cloud'){setSave('idle');return;}
-  later('profile',async()=>{await ensurePersisted();await pdoc().set({visited:S.visited,plan:S.plan,example:S.example,updatedAt:Date.now()});});
-}
-function saveTrip(id){
-  if(store.mode==='local'){saveProfile();return;}
-  if(store.mode!=='cloud'){setSave('idle');return;}
-  later('trip:'+id,async()=>{await ensurePersisted();const t=S.trips.find(x=>x.id===id);if(t)await tdoc(id).set(stripId(t));});
-}
-function removeTripDoc(id){
-  if(store.mode==='local'){saveProfile();return;}
-  if(store.mode!=='cloud'||!S.persisted)return;
-  setSave('saving');enqueue(async()=>{await tdoc(id).delete();});
-}
-async function initStore(){
-  try{
-    if(window.claude&&window.claude.use){
-      const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
-      const id=user?await user.id():null;
-      if(db&&id){store.db=db;store.uid=id;store.mode='cloud';}
-    }
-  }catch(e){console.warn(e);}
-  if(store.mode!=='cloud'){try{localStorage.setItem('wm_t','1');localStorage.removeItem('wm_t');store.mode='local';}catch(e){}}
-}
-async function loadAll(){
-  try{
-    if(store.mode==='cloud'){
-      const snap=await pdoc().get();
-      if(snap.exists){
-        const d=clone(snap.data());
-        S={visited:d.visited||{},plan:d.plan||null,example:!!d.example,persisted:true,trips:[]};
-        const ts=await pdoc().collection('trips').get();
-        S.trips=ts.docs.map(x=>Object.assign(clone(x.data()),{id:x.id}));
-        return;
-      }
-    }else if(store.mode==='local'){
-      const raw=localStorage.getItem(KEY);
-      if(raw){const d=JSON.parse(raw);S=Object.assign({visited:{},plan:null,trips:[],example:false,persisted:true},d);return;}
-    }
-  }catch(e){console.warn('load failed',e);}
-  S=sample();
+const hasContent=g=>!!g&&!g.example&&(Object.keys(g.visited).length>0||g.trips.length>0);
+
+/* ----- guest mode: saved in this browser only ----- */
+function readGuest(){try{const raw=localStorage.getItem(KEY);return raw?normState(JSON.parse(raw)):null;}catch(e){return null;}}
+function clearGuest(){try{localStorage.removeItem(KEY);}catch(e){}}
+function enterLocal(){
+  store.mode='local';store.blocked=false;
+  clearTimeout(store.timers.local);store.waiting.delete('local');
+  try{localStorage.setItem('wm_t','1');localStorage.removeItem('wm_t');}catch(e){store.mode='memory';}
+  S=readGuest()||sample();
 }
 
+/* ----- saving (all modes) ----- */
+function saveProfile(){
+  if(store.mode==='cloud'){markDirty('profile');return;}
+  if(store.mode==='local'){later('local',async()=>{if(store.mode==='local')localStorage.setItem(KEY,JSON.stringify(guestShape()));});return;}
+  setSave('idle');
+}
+function saveTrip(id){if(store.mode==='cloud'){markDirty('trip:'+id);return;}saveProfile();}
+function removeTripDoc(id){if(store.mode==='cloud'){markDirty('del:'+id);return;}saveProfile();}
+function flushLocal(){if(store.mode==='local'&&store.waiting.size){try{localStorage.setItem(KEY,JSON.stringify(guestShape()));}catch(e){}}}
+
+/* ----- talking to Supabase ----- */
+const authUrl=p=>A.cfg.supabaseUrl+'/auth/v1'+p;
+async function gt(path,o){
+  o=o||{};
+  const h={apikey:A.cfg.supabaseAnonKey,'Content-Type':'application/json'};
+  if(o.token)h.Authorization='Bearer '+o.token;
+  let r;
+  try{r=await fetch(authUrl(path)+(o.query||''),{method:o.method||'POST',headers:h,body:o.body?JSON.stringify(o.body):undefined});}
+  catch(e){throw Object.assign(new Error('You seem to be offline. Try again when you are connected.'),{code:'network'});}
+  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null;}catch(e){}
+  if(!r.ok){
+    const code=(j&&(j.error_code||j.error))||'error';
+    const msg=(j&&(j.msg||j.error_description||j.message))||('Request failed ('+r.status+')');
+    throw Object.assign(new Error(msg),{code,status:r.status});
+  }
+  return j;
+}
+function friendly(e){
+  const c=e.code||'',m=e.message||'';
+  if(c==='network')return m;
+  if(c==='invalid_credentials'||/invalid login credentials/i.test(m))return 'That email and password do not match.';
+  if(c==='email_not_confirmed'||/not confirmed/i.test(m))return 'Please confirm your email first. Check your inbox for the link we sent.';
+  if(c==='user_already_exists'||/already registered/i.test(m))return 'There is already an account with that email. Try signing in.';
+  if(c==='over_email_send_rate_limit'||c==='over_request_rate_limit'||e.status===429)return 'Too many attempts. Wait a minute and try again.';
+  if(c==='same_password')return 'Choose a password you have not used before.';
+  return m||'Something went wrong. Try again.';
+}
+function setSession(s){
+  if(!s){A.session=null;try{localStorage.removeItem(AUTHKEY);}catch(e){}return;}
+  A.session={access_token:s.access_token,refresh_token:s.refresh_token,expires_at:s.expires_at||Math.floor(Date.now()/1000)+(s.expires_in||3600)};
+  if(s.user)A.user={id:s.user.id,email:s.user.email||''};
+  try{localStorage.setItem(AUTHKEY,JSON.stringify({session:A.session,user:A.user}));}catch(e){}
+}
+function loadSession(){try{const j=JSON.parse(localStorage.getItem(AUTHKEY)||'null');if(j&&j.session&&j.session.access_token&&j.user&&j.user.id){A.session=j.session;A.user=j.user;}}catch(e){}}
+let refreshing=null;
+function refresh(){
+  if(refreshing)return refreshing;
+  refreshing=(async()=>{
+    try{
+      const j=await gt('/token',{query:'?grant_type=refresh_token',body:{refresh_token:A.session.refresh_token}});
+      setSession(j);return true;
+    }catch(e){
+      if(e.status===400||e.status===401||e.status===403)return false;
+      throw e;
+    }finally{refreshing=null;}
+  })();
+  return refreshing;
+}
+/* A valid access token, or null if the person has to sign in again. Offline, the old token is returned. */
+async function token(){
+  if(!A.session)return null;
+  if(A.session.expires_at-Math.floor(Date.now()/1000)<60){
+    let ok;
+    try{ok=await refresh();}catch(e){return A.session.access_token;}
+    if(!ok){leaveCloud(true,'Your session ended. Sign in again to keep saving to your account.');return null;}
+  }
+  return A.session.access_token;
+}
+async function sb(path,o){
+  o=o||{};
+  for(let attempt=0;attempt<2;attempt++){
+    const tk=await token();
+    if(!tk)throw Object.assign(new Error('Signed out'),{code:'signed_out'});
+    const h={apikey:A.cfg.supabaseAnonKey,Authorization:'Bearer '+tk,'Content-Type':'application/json'};
+    if(o.prefer)h.Prefer=o.prefer;
+    let r;
+    try{r=await fetch(A.cfg.supabaseUrl+'/rest/v1/'+path,{method:o.method||'GET',headers:h,body:o.body===undefined?undefined:JSON.stringify(o.body)});}
+    catch(e){throw Object.assign(new Error('Offline'),{code:'network'});}
+    if(r.status===401&&attempt===0){A.session.expires_at=0;continue;}
+    const t=await r.text();let j=null;try{j=t?JSON.parse(t):null;}catch(e){}
+    if(!r.ok)throw Object.assign(new Error((j&&j.message)||('HTTP '+r.status)),{code:(j&&j.message)||'http',status:r.status});
+    return j;
+  }
+  throw Object.assign(new Error('Signed out'),{code:'signed_out'});
+}
+/* Our own server functions (billing). */
+async function api(name,body){
+  for(let attempt=0;attempt<2;attempt++){
+    const tk=await token();
+    if(!tk)throw Object.assign(new Error('Please sign in.'),{code:'signed_out'});
+    let r;
+    try{r=await fetch('/api/'+name,{method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json'},body:JSON.stringify(body||{})});}
+    catch(e){throw Object.assign(new Error('You seem to be offline.'),{code:'network'});}
+    if(r.status===401&&attempt===0){A.session.expires_at=0;continue;}
+    const t=await r.text();let j=null;try{j=t?JSON.parse(t):null;}catch(e){}
+    if(!r.ok)throw Object.assign(new Error((j&&j.message)||'Something went wrong. Try again.'),{code:(j&&j.error)||'error',status:r.status});
+    return j;
+  }
+}
+
+/* ----- cloud saving: a set of "dirty" items, sent in the background and retried until it works ----- */
+const cacheKey=()=>'duckcellent.cache.'+A.user.id;
+function readCache(){try{const j=JSON.parse(localStorage.getItem(cacheKey())||'null');return j&&j.S?j:null;}catch(e){return null;}}
+function writeCacheNow(){
+  if(store.mode!=='cloud'||!A.user||store.blocked)return;
+  try{localStorage.setItem(cacheKey(),JSON.stringify({S:guestShape(),dirty:[...store.dirty.keys()],membership:SUB,at:Date.now()}));}catch(e){}
+}
+let cacheT=null;
+const scheduleCache=()=>{clearTimeout(cacheT);cacheT=setTimeout(writeCacheNow,300);};
+function jobFor(key){
+  if(key==='profile')return async()=>{
+    await sb('profiles?on_conflict=user_id',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{user_id:A.user.id,data:{visited:S.visited,example:S.example}}});
+  };
+  if(key.startsWith('trip:')){const id=key.slice(5);return async()=>{
+    const t=S.trips.find(x=>x.id===id);if(!t)return;
+    await sb('trips?on_conflict=user_id,id',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{user_id:A.user.id,id,data:stripId(t)}});
+  };}
+  if(key.startsWith('del:')){const id=key.slice(4);return async()=>{
+    await sb('trips?user_id=eq.'+encodeURIComponent(A.user.id)+'&id=eq.'+encodeURIComponent(id),{method:'DELETE'});
+  };}
+  return async()=>{};
+}
+function markDirty(key){
+  if(store.mode!=='cloud'||store.blocked)return;
+  store.dirty.set(key,jobFor(key));
+  if(key.startsWith('trip:'))store.dirty.delete('del:'+key.slice(5));
+  if(key.startsWith('del:'))store.dirty.delete('trip:'+key.slice(4));
+  setSave('saving');scheduleCache();scheduleFlush(600);
+}
+function scheduleFlush(ms){clearTimeout(store.ft);store.ft=setTimeout(flush,ms);}
+async function flush(){
+  if(store.mode!=='cloud'||store.flushing||store.blocked)return;
+  clearTimeout(store.ft);store.flushing=true;let failed=false;
+  try{
+    for(const [key,job] of [...store.dirty]){
+      try{
+        await job();
+        if(store.dirty.get(key)===job)store.dirty.delete(key);
+      }catch(e){
+        if(e.code==='trip_limit'||e.code==='country_limit'||e.code==='trip_cap'){store.dirty.delete(key);await limitHit(e.code);continue;}
+        throw e;
+      }
+    }
+    store.retry=0;
+    if(!store.dirty.size)setSave('idle');
+  }catch(e){
+    failed=true;store.retry++;
+    if(e.code==='signed_out'){/* leaveCloud already ran */}
+    else{
+      console.warn('save failed',e);
+      setSave(e.code==='network'||!navigator.onLine?'offline':'error');
+      scheduleFlush(Math.min(60000,2000*Math.pow(2,store.retry)));
+    }
+  }finally{
+    store.flushing=false;scheduleCache();
+    if(!failed&&store.dirty.size&&store.mode==='cloud')scheduleFlush(300);
+  }
+}
+async function flushNow(){
+  for(let i=0;i<50&&store.flushing;i++)await sleep(100);
+  await flush();
+  for(let i=0;i<50&&store.flushing;i++)await sleep(100);
+}
+/* The database refused a change because of the free plan's limits. Show the real state again. */
+async function limitHit(code){
+  try{await loadMembership();}catch(e){}
+  try{
+    const cloud=await loadCloud();
+    S=fromCloud(cloud);T.id=null;T.editing=null;if(sel)closeSheet();
+  }catch(e){}
+  renderAll();
+  toast(code==='trip_cap'?'That is the most trips one account can hold.':'That change was not saved because it goes over the free plan limit. See Membership for Plus.',8000);
+}
+
+/* ----- loading from the account ----- */
+async function loadCloud(){
+  const id=encodeURIComponent(A.user.id);
+  const [p,t]=await Promise.all([
+    sb('profiles?select=data&user_id=eq.'+id+'&limit=1'),
+    sb('trips?select=id,data&user_id=eq.'+id+'&order=created_at.asc,id.asc')
+  ]);
+  return {profile:p&&p[0]||null,trips:t||[]};
+}
+function fromCloud(c){
+  const d=c.profile&&c.profile.data||{};
+  return normState({visited:d.visited,example:d.example,trips:c.trips.map(r=>Object.assign(clone(r.data||{}),{id:r.id}))});
+}
+function summaryOf(row){
+  if(!row)return {plus:false,plan:null,status:null,current_period_end:null,cancel_at_period_end:false,has_customer:false};
+  const live=['active','trialing','past_due'].includes(row.status)&&(!row.current_period_end||new Date(row.current_period_end).getTime()>Date.now()-2*864e5);
+  return {plus:live,plan:row.plan||null,status:row.status||null,current_period_end:row.current_period_end||null,cancel_at_period_end:!!row.cancel_at_period_end,has_customer:!!row.stripe_customer_id};
+}
+async function loadMembership(){
+  const rows=await sb('subscriptions?select=*&user_id=eq.'+encodeURIComponent(A.user.id)+'&limit=1');
+  const row=rows&&rows[0]||null;SUB=summaryOf(row);return row;
+}
+async function syncMembership(){const j=await api('sync');SUB=j.membership;return SUB;}
+
+function mergeGuest(g){
+  let added=0,skipped=0;
+  for(const id of Object.keys(g.visited)){
+    if(S.visited[id])continue;
+    const v=g.visited[id];
+    if((v.s==='been'||v.s==='lived')&&!isPlus()&&markedCount()>=FREE_COUNTRIES){skipped++;continue;}
+    S.visited[id]=v;added++;
+  }
+  for(const t of g.trips){
+    if(S.trips.some(x=>x.id===t.id))continue;
+    if(!isPlus()&&S.trips.length>=FREE_TRIPS){skipped++;continue;}
+    S.trips.push(t);markDirty('trip:'+t.id);added++;
+  }
+  if(added)markDirty('profile');
+  if(!skipped)clearGuest();
+  toast(skipped?added+' item'+(added===1?'':'s')+' from this device added. '+skipped+' left out because of the free plan limits.':added?'The countries and trips from this device are now in your account.':'Signed in.',7000);
+}
+function useCache(c){
+  S=normState(c.S);store.dirty=new Map();
+  for(const k of c.dirty||[])store.dirty.set(k,jobFor(k));
+}
+async function enterCloud(){
+  store.mode='cloud';store.dirty=new Map();store.blocked=false;store.retry=0;
+  clearTimeout(store.timers.local);store.waiting.delete('local');
+  const cache=readCache();
+  let row=null,cloud=null;
+  try{
+    row=await loadMembership();
+    cloud=await loadCloud();
+  }catch(e){
+    if(e.code==='signed_out'){enterLocal();return;}
+    console.warn('cloud load failed',e);
+    if(cache){useCache(cache);SUB=cache.membership||SUB;setSave('offline');toast('You are offline. Showing your last saved copy.',6000);return;}
+    store.blocked=true;S={visited:{},trips:[],example:false};setSave('error');
+    toast('Could not load your data. Check your connection and reload the page.',10000);return;
+  }
+  if(cache&&cache.dirty&&cache.dirty.length){
+    useCache(cache);toast('Restored changes you made on this device. Saving them now.',6000);scheduleFlush(300);
+  }else{
+    const guest=readGuest(),g=hasContent(guest)?guest:null;
+    if(cloud.profile||cloud.trips.length){S=fromCloud(cloud);if(g)mergeGuest(g);}
+    else if(g){
+      S=g;S.example=false;markDirty('profile');S.trips.forEach(t=>markDirty('trip:'+t.id));
+      clearGuest();toast('Your countries and trips from this device are now saved to your account.',7000);
+    }else S={visited:{},trips:[],example:false};
+  }
+  writeCacheNow();
+  if(row&&row.stripe_customer_id&&A.cfg.billing)syncMembership().then(()=>{writeCacheNow();renderChrome();renderPlans();}).catch(()=>{});
+}
+/* Back to guest mode. keepCache is true when the session ended on its own, so unsynced edits survive until the next sign-in. */
+function leaveCloud(keepCache,msg){
+  if(A.user){if(keepCache)writeCacheNow();else{try{localStorage.removeItem(cacheKey());}catch(e){}}}
+  setSession(null);A.user=null;SUB=null;
+  clearTimeout(store.ft);store.dirty=new Map();
+  enterLocal();T.id=null;T.editing=null;if(sel)closeSheet();
+  setSave('idle');if(ready)renderAll();
+  if(msg)toast(msg,8000);
+}
+async function softRefresh(){
+  if(store.mode!=='cloud'||store.blocked||store.dirty.size||store.flushing||T.editing)return;
+  try{
+    await loadMembership();
+    const cloud=await loadCloud();
+    if(store.dirty.size||store.flushing)return;
+    if(cloud.profile||cloud.trips.length){
+      const next=fromCloud(cloud);
+      if(!deepEq(next,normState(guestShape()))){S=next;if(T.id&&!trip())T.id=null;refreshAtlas();renderTrips();if(sel)renderSheet();writeCacheNow();}
+    }
+    renderChrome();renderPlans();
+  }catch(e){}
+}
+
+/* ---------- account dialog: sign in, create account, reset password, account ---------- */
+const D={mode:null,msg:'',email:'',busy:false,warn:false,confirmDel:false};
+const dlg=()=>$('#dlg');
+function renderAll(){renderChrome();refreshAtlas();renderTrips();renderPlans();}
+function openDlg(mode){
+  D.mode=mode;D.msg='';D.busy=false;D.warn=false;D.confirmDel=false;
+  renderDlg();
+  const d=dlg();if(d&&!d.open){try{d.showModal();}catch(e){d.setAttribute('open','');}}
+  const f=$('#dlgBody input');if(f)f.focus();
+}
+function closeDlg(){const d=dlg();if(d&&d.open)d.close();D.mode=null;}
+function setDlgMsg(m,ok){const el=$('#dlgMsg');D.msg=m;if(el){el.textContent=m;el.className=ok?'okmsg':'err';}}
+function setDlgBusy(b,label){
+  D.busy=b;const btn=$('#dlgBody button[type=submit]');
+  if(btn){btn.disabled=b;if(b){btn.dataset.l=btn.textContent;btn.textContent='Please wait…';}else if(btn.dataset.l)btn.textContent=btn.dataset.l;}
+}
+function renderDlg(){
+  const body=$('#dlgBody');if(!body)return;
+  const x='<button class="x dlgx" type="button" data-act="dlgClose" aria-label="Close">&times;</button>';
+  const msg=`<div id="dlgMsg" class="err" role="alert">${esc(D.msg)}</div>`;
+  const email=`<div class="field"><label for="aEmail">Email</label><input id="aEmail" name="email" type="email" autocomplete="email" inputmode="email" required value="${esc(D.email)}"></div>`;
+  const pw=(label,ac,hint)=>`<div class="field"><label for="aPass">${label}</label><input id="aPass" name="password" type="password" autocomplete="${ac}" required minlength="${ac==='current-password'?1:8}">${hint?`<span class="muted" style="font-size:12px">${hint}</span>`:''}</div>`;
+  let h='';
+  if(D.mode==='signin'){
+    h=`${x}<h2 id="dlgTitle">Sign in</h2><p class="muted" style="margin:4px 0 0">Keep your atlas and trips safe, and open them on any device.</p>
+      <form id="authForm" novalidate>${email}${pw('Password','current-password')}${msg}
+      <button class="btn" type="submit">Sign in</button>
+      <div class="linksrow"><button type="button" class="linkbtn" data-act="dlgMode" data-m="forgot">Forgot password?</button><button type="button" class="linkbtn" data-act="dlgMode" data-m="signup">Create an account</button></div></form>`;
+  }else if(D.mode==='signup'){
+    h=`${x}<h2 id="dlgTitle">Create your account</h2><p class="muted" style="margin:4px 0 0">Free to start. Anything you have saved on this device moves into your account.</p>
+      <form id="authForm" novalidate>${email}${pw('Password','new-password','At least 8 characters.')}${msg}
+      <button class="btn" type="submit">Create account</button>
+      <div class="linksrow"><button type="button" class="linkbtn" data-act="dlgMode" data-m="signin">I already have an account</button></div></form>`;
+  }else if(D.mode==='forgot'){
+    h=`${x}<h2 id="dlgTitle">Reset your password</h2><p class="muted" style="margin:4px 0 0">We will email you a link to choose a new one.</p>
+      <form id="authForm" novalidate>${email}${msg}
+      <button class="btn" type="submit">Send reset link</button>
+      <div class="linksrow"><button type="button" class="linkbtn" data-act="dlgMode" data-m="signin">Back to sign in</button></div></form>`;
+  }else if(D.mode==='reset'){
+    h=`${x}<h2 id="dlgTitle">Choose a new password</h2>
+      <form id="authForm" novalidate>${pw('New password','new-password','At least 8 characters.')}${msg}
+      <button class="btn" type="submit">Save password</button></form>`;
+  }else if(D.mode==='check'){
+    h=`${x}<h2 id="dlgTitle">Check your email</h2><p style="margin:8px 0 14px">${esc(D.msg)}</p>
+      <button class="btn" type="button" data-act="dlgClose">Done</button>`;
+  }else if(D.mode==='account'){
+    const cur=planOf();
+    h=`${x}<h2 id="dlgTitle">Your account</h2>
+      <p style="margin:6px 0 0"><b>${esc(A.user?A.user.email:'')}</b></p>
+      <p class="muted" style="margin:2px 0 14px">${cur?`Duckcellent Plus · ${esc(cur.label)}`:'Free plan'}</p>
+      ${D.warn?`<div class="notice" style="margin:0 0 12px">Some changes have not been saved yet. If you sign out now they will be lost.</div>`:''}
+      <div class="stack">
+        <button class="btn ghost" type="button" data-act="dlgPlans">${cur?'Manage membership':'See membership plans'}</button>
+        <button class="btn ghost" type="button" data-act="exportData">Download my data</button>
+        <button class="btn ghost" type="button" data-act="signout">${D.warn?'Sign out anyway':'Sign out'}</button>
+      </div>
+      <div class="dangerzone">${D.confirmDel?`<p style="margin:0 0 8px"><b>Delete your account for good?</b> Your atlas, trips and membership are removed and cannot be recovered. An active subscription is cancelled right away.</p>
+        <div class="field"><label for="delConfirm">Type DELETE to confirm</label><input id="delConfirm" type="text" autocomplete="off"></div>
+        ${msg}<div class="formactions"><button class="btn danger sm" type="button" data-act="delAcctYes">Delete my account</button><button class="btn ghost sm" type="button" data-act="delAcctNo">Keep it</button></div>`
+        :`<button class="linkbtn" type="button" data-act="delAcct" style="color:var(--danger)">Delete account</button>`}</div>`;
+  }
+  body.innerHTML=h;
+}
+document.addEventListener('submit',async e=>{
+  const f=e.target;if(!f||f.id!=='authForm')return;
+  e.preventDefault();if(D.busy)return;
+  const m=D.mode,email=f.elements.email?f.elements.email.value.trim():'',pass=f.elements.password?f.elements.password.value:'';
+  if(email)D.email=email;
+  if(m!=='reset'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){setDlgMsg('Enter a valid email address.');return;}
+  if((m==='signup'||m==='reset')&&pass.length<8){setDlgMsg('Use at least 8 characters for your password.');return;}
+  if(m==='signin'&&!pass){setDlgMsg('Enter your password.');return;}
+  setDlgMsg('');setDlgBusy(true);
+  const back=location.origin+'/';
+  try{
+    if(m==='signin'){
+      setSession(await gt('/token',{query:'?grant_type=password',body:{email,password:pass}}));
+      await afterSignIn();
+    }else if(m==='signup'){
+      const j=await gt('/signup',{query:'?redirect_to='+encodeURIComponent(back),body:{email,password:pass}});
+      if(j&&j.access_token){setSession(j);await afterSignIn();}
+      else{D.mode='check';D.msg='We sent a confirmation link to '+email+'. Open it on this device to finish creating your account.';renderDlg();}
+    }else if(m==='forgot'){
+      await gt('/recover',{query:'?redirect_to='+encodeURIComponent(back),body:{email}});
+      D.mode='check';D.msg='If there is an account for '+email+', a link to reset the password is on its way.';renderDlg();
+    }else if(m==='reset'){
+      await gt('/user',{method:'PUT',token:A.session.access_token,body:{password:pass}});
+      toast('Password updated.');closeDlg();
+    }
+  }catch(err){
+    setDlgMsg(friendly(err));
+  }finally{if(D.mode===m)setDlgBusy(false);}
+});
+async function afterSignIn(){
+  closeDlg();
+  flushLocal();
+  toast('Signed in. Loading your data…',3000);
+  await enterCloud();
+  T.id=null;T.editing=null;if(sel)closeSheet();
+  setSave(store.state==='offline'||store.state==='error'?store.state:'idle');
+  renderAll();
+  if(P.after==='plans'){P.after=null;show('plans');}
+}
+async function doSignOut(){
+  if(store.mode==='cloud'&&store.dirty.size&&!D.warn){
+    await flushNow();
+    if(store.dirty.size){D.warn=true;renderDlg();return;}
+  }
+  try{const tk=A.session&&A.session.access_token;if(tk)gt('/logout',{token:tk}).catch(()=>{});}catch(e){}
+  closeDlg();
+  leaveCloud(false);
+  toast('Signed out.');
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),email:A.user&&A.user.email,atlas:S.visited,trips:S.trips},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='duckcellent-data.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+async function deleteAccount(){
+  const inp=$('#delConfirm');
+  if(!inp||inp.value.trim()!=='DELETE'){setDlgMsg('Type DELETE (in capitals) to confirm.');return;}
+  setDlgMsg('');
+  try{
+    await api('delete-account',{confirm:true});
+    closeDlg();leaveCloud(false);
+    toast('Your account has been deleted.',8000);
+  }catch(e){setDlgMsg(e.message||'Could not delete the account. Nothing was removed.');}
+}
+document.addEventListener('click',e=>{const d=dlg();if(d&&e.target===d)closeDlg();});
+
 /* ---------- plan helpers ---------- */
-const planOf=()=>S.plan&&PLANS.find(p=>p.id===S.plan.id)||null;
-const isPlus=()=>!!planOf();
+const isPlus=()=>!!(SUB&&SUB.plus);
+const planOf=()=>isPlus()?(PLANS.find(p=>p.id===SUB.plan)||{id:SUB.plan||'plus',label:'Plus',months:0,price:0,unit:''}):null;
 const markedCount=()=>Object.values(S.visited).filter(v=>v.s==='been'||v.s==='lived').length;
 
 /* ---------- stats ---------- */
@@ -1304,7 +1716,8 @@ function refreshAtlas(){renderStats();paintMap();renderContinents();}
 function renderChrome(){
   $('#banner').hidden=!(ready&&S.example);
   const p=planOf(),b=$('#planBadge');
-  b.textContent=p?'Plus · '+p.label:'Free';b.classList.toggle('plus',!!p);
+  b.textContent=p?(p.label&&p.label!=='Plus'?'Plus · '+p.label:'Plus'):'Free';b.classList.toggle('plus',!!p);
+  const ab=$('#acctBtn');ab.hidden=!A.cfg;ab.textContent=A.user?'Account':'Sign in';
 }
 
 /* ---------- trips ---------- */
@@ -1534,27 +1947,55 @@ const saving=p=>Math.round((1-perMonth(p)/perMonth(PLANS[0]))*100);
 const pm=n=>money(n,PLAN_CCY);
 function renderPlans(){
   const root=$('#view-plans');if(!ready){root.innerHTML='';return;}
-  const cur=planOf(),sel=PLANS.find(p=>p.id===P.sel)||PLANS[3];
+  const cur=planOf(),sel=PLANS.find(p=>p.id===P.sel)||PLANS[PLANS.length-1];
+  const live=!!(A.cfg&&A.cfg.billing);
   let h=`<div class="sectionhead" style="margin-top:0"><div><h2>Membership</h2><p class="lead" style="margin:4px 0 0">Keep every country and trip saved for as long as you keep travelling.</p></div></div>`;
   if(cur){
-    h+=`<div class="panel status"><div><span class="eyebrow">Your plan</span><h3 style="font-size:22px;margin-top:2px">Duckcellent Plus · ${esc(cur.label)}</h3><div class="muted">Renews on ${esc(fmtDayY(S.plan.renews))} for ${pm(cur.price)}</div></div>
-      <div>${P.cancel?`<span class="muted" style="margin-right:8px">Cancel membership?</span><button class="btn danger sm" data-act="cancelYes">Cancel it</button> <button class="btn ghost sm" data-act="cancelNo">Keep it</button>`:`<button class="btn ghost sm" data-act="cancelPlan">Cancel membership</button>`}</div></div>`;
+    const end=SUB&&SUB.current_period_end?fmtDayY(SUB.current_period_end):'';
+    h+=`<div class="panel status"><div><span class="eyebrow">Your plan</span><h3 style="font-size:22px;margin-top:2px">Duckcellent Plus${cur.label&&cur.label!=='Plus'?' · '+esc(cur.label):''}</h3>
+      <div class="muted">${SUB.cancel_at_period_end?`Ends on ${esc(end)}. You keep Plus until then.`:`Renews on ${esc(end)}${cur.price?' for '+pm(cur.price):''}`}</div>
+      ${SUB.status==='past_due'?`<div class="err">Your last payment did not go through. Update your card to keep Plus.</div>`:''}</div>
+      <div><button class="btn ghost sm" data-act="portal"${P.busy?' disabled':''}>Manage billing</button></div></div>`;
   }
-  h+=`<div class="plans" role="group" aria-label="Choose a billing period">`+PLANS.map(p=>`<button class="plan" data-act="selPlan" data-id="${p.id}" aria-pressed="${p.id===P.sel}">
+  h+=`<div class="plans" role="group" aria-label="Choose a billing period">`+PLANS.map(p=>`<button class="plan" data-act="selPlan" data-id="${esc(p.id)}" aria-pressed="${p.id===P.sel}">
       ${saving(p)>0?`<span class="save">Save ${saving(p)}%</span>`:''}
       ${cur&&cur.id===p.id?'<span class="cur">Current plan</span>':''}
       <h3>${esc(p.label)}</h3><div class="price">${pm(p.price)}<small> / ${esc(p.unit)}</small></div>
       <div class="muted" style="font-size:13px">${p.months>1?pm(perMonth(p))+' a month':'Billed every month'}</div></button>`).join('')+'</div>';
-  h+=`<div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn" data-act="subscribe">${cur?(cur.id===sel.id?'Current plan selected':'Switch to '+esc(sel.label)):'Subscribe · '+pm(sel.price)+' / '+esc(sel.unit)}</button><span class="muted" style="font-size:13px">Cancel any time. Your map and trips stay saved.</span></div>`;
-  if(P.confirm)h+=`<div class="confirm"><h3 style="font-size:18px">Confirm ${esc(sel.label)} plan</h3><p style="margin:6px 0 12px">${pm(sel.price)} every ${esc(sel.unit)}. This is a prototype, so no payment is taken. In the live app this step opens secure checkout.</p><button class="btn" data-act="confirmPlan">Confirm and activate</button> <button class="btn ghost" data-act="cancelConfirm">Not now</button></div>`;
+  let btn;
+  if(P.busy)btn='<button class="btn" disabled>Working…</button>';
+  else if(!A.cfg)btn='<button class="btn" disabled>Subscriptions open soon</button>';
+  else if(!A.user)btn='<button class="btn" data-act="subscribe">Create an account to subscribe</button>';
+  else if(!live)btn='<button class="btn" disabled>Payments are not switched on yet</button>';
+  else if(cur&&cur.id===sel.id)btn=SUB.cancel_at_period_end?'<button class="btn" data-act="subscribe">Keep my membership</button>':'<button class="btn" disabled>Current plan</button>';
+  else if(cur)btn=`<button class="btn" data-act="subscribe">Switch to ${esc(sel.label)}</button>`;
+  else btn=`<button class="btn" data-act="subscribe">Subscribe · ${pm(sel.price)} / ${esc(sel.unit)}</button>`;
+  h+=`<div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">${btn}<span class="muted" style="font-size:13px">Cancel any time. Your map and trips stay saved.</span></div>`;
+  if(P.err)h+=`<div class="err" role="alert">${esc(P.err)}</div>`;
+  if(P.confirm)h+=`<div class="confirm"><h3 style="font-size:18px">Switch to the ${esc(sel.label)} plan?</h3><p style="margin:6px 0 12px">${pm(sel.price)} every ${esc(sel.unit)}. Stripe works out the difference for the time left on your current plan, so you are only charged or credited for what changes.</p><button class="btn" data-act="confirmPlan">Switch plan</button> <button class="btn ghost" data-act="cancelConfirm">Not now</button></div>`;
   h+=`<div class="sectionhead"><h2>Free and Plus</h2></div><div class="scroll"><table class="cmp"><thead><tr><th></th><th>Free</th><th>Plus</th></tr></thead><tbody>
     <tr><td>Countries you've been to or lived in</td><td>Up to ${FREE_COUNTRIES}</td><td>Unlimited</td></tr>
     <tr><td>Want-to-go list</td><td>Unlimited</td><td>Unlimited</td></tr>
     <tr><td>Trips</td><td>${FREE_TRIPS}</td><td>Unlimited</td></tr>
     <tr><td>Itinerary, flights and stays</td><td>Included</td><td>Included</td></tr>
     <tr><td>Map, continents and regions</td><td>Included</td><td>Included</td></tr></tbody></table></div>
-    <p class="muted" style="font-size:13px;margin-top:12px">If a membership ends, nothing is deleted. You keep everything you've saved and the free limits apply to adding new items.</p>`;
+    <p class="muted" style="font-size:13px;margin-top:12px">If a membership ends, nothing is deleted. You keep everything you've saved and the free limits apply to adding new items. Payments are handled by Stripe, so your card details never touch Duckcellent.</p>`;
   root.innerHTML=h;
+}
+async function startCheckout(){
+  P.busy=true;P.err='';P.confirm=false;renderPlans();
+  try{
+    const j=await api('checkout',{plan:P.sel});
+    if(j.url){location.href=j.url;return;}
+    if(j.changed){SUB=j.membership;writeCacheNow();toast(j.resumed?'Your membership will continue.':'Your plan has been changed.',6000);}
+  }catch(e){P.err=e.message||'Something went wrong. Try again.';}
+  P.busy=false;renderChrome();renderPlans();
+}
+async function openPortal(){
+  P.busy=true;P.err='';renderPlans();
+  try{const j=await api('portal');location.href=j.url;return;}
+  catch(e){P.err=e.message||'Could not open billing. Try again.';}
+  P.busy=false;renderPlans();
 }
 
 /* ---------- actions ---------- */
@@ -1614,35 +2055,109 @@ document.addEventListener('click',e=>{
         el.outerHTML=blocked?`<span class="notice" style="display:inline-block">${blocked} not added: the free plan holds ${FREE_COUNTRIES} countries. <button class="linkbtn" data-act="goPlans">See plans</button></span>`:'<span class="muted">Added to your atlas.</span>';
       }
       break;
-    case 'selPlan':P.sel=id;P.confirm=false;renderPlans();break;
-    case 'subscribe':if(!(planOf()&&planOf().id===P.sel)){P.confirm=true;renderPlans();}break;
+    case 'selPlan':P.sel=id;P.confirm=false;P.err='';renderPlans();break;
+    case 'subscribe':
+      if(!A.user){P.after='plans';openDlg('signup');break;}
+      {const c=planOf();if(c&&c.id!==P.sel){P.confirm=true;renderPlans();}else startCheckout();}
+      break;
     case 'cancelConfirm':P.confirm=false;renderPlans();break;
-    case 'confirmPlan':{
-      const p=PLANS.find(x=>x.id===P.sel),now=new Date();
-      S.plan={id:p.id,since:isoDate(now),renews:isoDate(addMonths(now,p.months))};
-      P.confirm=false;saveProfile();renderChrome();renderPlans();break;}
-    case 'cancelPlan':P.cancel=true;renderPlans();break;
-    case 'cancelNo':P.cancel=false;renderPlans();break;
-    case 'cancelYes':S.plan=null;P.cancel=false;saveProfile();renderChrome();renderPlans();break;
+    case 'confirmPlan':startCheckout();break;
+    case 'portal':openPortal();break;
+    case 'account':openDlg(A.user?'account':'signin');break;
+    case 'dlgClose':closeDlg();break;
+    case 'dlgMode':D.mode=el.getAttribute('data-m');D.msg='';renderDlg();{const f=$('#dlgBody input');if(f)f.focus();}break;
+    case 'dlgPlans':closeDlg();show('plans');break;
+    case 'exportData':exportData();break;
+    case 'signout':doSignOut();break;
+    case 'delAcct':D.confirmDel=true;D.msg='';renderDlg();break;
+    case 'delAcctNo':D.confirmDel=false;D.msg='';renderDlg();break;
+    case 'delAcctYes':deleteAccount();break;
   }
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sel&&!e.target.closest('.combo'))closeSheet();});
 
-function flushLocal(){if(store.mode==='local'&&store.waiting.size){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}}
-window.addEventListener('pagehide',flushLocal);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushLocal();});
+/* ---------- coming back from sign-in links and Stripe ---------- */
+function cleanHash(){try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
+async function handleAuthHash(){
+  const h=location.hash;if(!h||h.length<2)return;
+  const q=new URLSearchParams(h.slice(1));
+  if(q.get('error')||q.get('error_description')){
+    cleanHash();
+    toast(q.get('error_code')==='otp_expired'?'That link has expired. Request a new one and try again.':(q.get('error_description')||'That link did not work.'),8000);
+    return;
+  }
+  if(!q.get('access_token')||!q.get('refresh_token'))return;
+  const type=q.get('type');
+  const s={access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_at:+q.get('expires_at')||undefined,expires_in:+q.get('expires_in')||3600};
+  cleanHash();
+  try{
+    s.user=await gt('/user',{method:'GET',token:s.access_token});
+    setSession(s);
+    if(type==='recovery')A.pendingReset=true;else A.justConfirmed=true;
+  }catch(e){toast(friendly(e),8000);}
+}
+async function handleReturn(){
+  const q=new URLSearchParams(location.search),co=q.get('checkout'),pr=q.get('portal');
+  if(!co&&!pr)return;
+  try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
+  show('plans');
+  if(co==='success'&&A.user){
+    toast('Thank you! Activating your membership…',10000);
+    for(let i=0;i<8;i++){
+      try{await syncMembership();}catch(e){}
+      if(isPlus())break;
+      await sleep(1500);
+    }
+    writeCacheNow();renderChrome();renderPlans();
+    toast(isPlus()?'Welcome to Duckcellent Plus.':'Your payment is still being confirmed. This page will update on its own.',8000);
+  }else if(co==='cancel'){
+    toast('Checkout cancelled. You have not been charged.',6000);
+  }else if(pr&&A.user){
+    try{await syncMembership();writeCacheNow();}catch(e){}
+    renderChrome();renderPlans();
+  }
+}
 
 /* ---------- start ---------- */
+async function loadConfig(){
+  let cfg=null;
+  try{
+    const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),5000);
+    const r=await fetch('/api/config',{cache:'no-store',signal:ctl.signal});clearTimeout(t);
+    if(r.ok){cfg=await r.json();try{localStorage.setItem(CFGKEY,JSON.stringify(cfg));}catch(e){}}
+  }catch(e){}
+  if(!cfg){try{cfg=JSON.parse(localStorage.getItem(CFGKEY)||'null');}catch(e){}}
+  if(cfg&&cfg.accounts&&cfg.supabaseUrl&&cfg.supabaseAnonKey){
+    A.cfg=cfg;
+    if(Array.isArray(cfg.plans)&&cfg.plans.length)PLANS=cfg.plans;
+    if(cfg.currency)PLAN_CCY=cfg.currency;
+    if(cfg.free){FREE_COUNTRIES=cfg.free.countries;FREE_TRIPS=cfg.free.trips;}
+  }
+}
+window.addEventListener('online',()=>{if(store.mode==='cloud'&&(store.dirty.size||store.state==='offline'))flush();});
+window.addEventListener('pagehide',()=>{flushLocal();writeCacheNow();});
+window.addEventListener('pageshow',e=>{if(e.persisted&&P.busy){P.busy=false;renderPlans();}});
+let hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){flushLocal();writeCacheNow();hiddenAt=Date.now();}
+  else if(store.mode==='cloud'&&hiddenAt&&Date.now()-hiddenAt>60000)softRefresh();
+});
+
 buildMap();
 combo($('#countrySearch'),$('#countryOpts'),id=>openSheet(id,true));
 renderStats();renderChrome();setSave('idle');
 (async function boot(){
-  await initStore();
-  await loadAll();
-  ready=true;setSave('idle');
+  await loadConfig();
+  if(A.cfg){loadSession();await handleAuthHash();}
+  if(A.cfg&&A.session&&A.user)await enterCloud();else enterLocal();
+  ready=true;
+  if(store.state!=='offline'&&store.state!=='error')setSave(store.dirty.size?'saving':'idle');else setSave(store.state);
   const first=CONTS.find(c=>REGS.filter(r=>r.cont===c).some(r=>r.ids.some(id=>S.visited[id]&&S.visited[id].s!=='wish')));
   if(first)openConts.add(first);
-  renderChrome();refreshAtlas();renderTrips();renderPlans();
+  renderAll();
+  if(A.pendingReset){A.pendingReset=false;openDlg('reset');}
+  else if(A.justConfirmed){A.justConfirmed=false;toast('Email confirmed. Welcome to Duckcellent.',6000);}
+  handleReturn();
 })();
 })();
 </script>

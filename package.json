@@ -1,0 +1,7 @@
+{
+  "name": "duckcellent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Duckcellent: mark where you have been, plan trips, keep everything in one place.",
+  "engines": { "node": "22.x" }
+}

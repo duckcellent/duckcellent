@@ -1,0 +1,26 @@
+const WORLD=[
+["Africa","Northern Africa","DZA:Algeria|EGY:Egypt|LBY:Libya|MAR:Morocco|SDN:Sudan|TUN:Tunisia|ESH:Western Sahara"],
+["Africa","Western Africa","BEN:Benin|BFA:Burkina Faso|CPV:Cabo Verde|CIV:Côte d'Ivoire|GMB:Gambia|GHA:Ghana|GIN:Guinea|GNB:Guinea-Bissau|LBR:Liberia|MLI:Mali|MRT:Mauritania|NER:Niger|NGA:Nigeria|SEN:Senegal|SLE:Sierra Leone|TGO:Togo"],
+["Africa","Middle Africa","AGO:Angola|CMR:Cameroon|CAF:Central African Republic|TCD:Chad|COG:Republic of the Congo|COD:DR Congo|GNQ:Equatorial Guinea|GAB:Gabon|STP:São Tomé and Príncipe"],
+["Africa","Eastern Africa","BDI:Burundi|COM:Comoros|DJI:Djibouti|ERI:Eritrea|ETH:Ethiopia|KEN:Kenya|MDG:Madagascar|MWI:Malawi|MUS:Mauritius|MOZ:Mozambique|RWA:Rwanda|SYC:Seychelles|SOM:Somalia|SSD:South Sudan|TZA:Tanzania|UGA:Uganda|ZMB:Zambia|ZWE:Zimbabwe"],
+["Africa","Southern Africa","BWA:Botswana|SWZ:Eswatini|LSO:Lesotho|NAM:Namibia|ZAF:South Africa"],
+["Asia","Western Asia","ARM:Armenia|AZE:Azerbaijan|BHR:Bahrain|CYP:Cyprus|GEO:Georgia|IRQ:Iraq|ISR:Israel|JOR:Jordan|KWT:Kuwait|LBN:Lebanon|OMN:Oman|PSE:Palestine|QAT:Qatar|SAU:Saudi Arabia|SYR:Syria|TUR:Türkiye|ARE:United Arab Emirates|YEM:Yemen"],
+["Asia","Central Asia","KAZ:Kazakhstan|KGZ:Kyrgyzstan|TJK:Tajikistan|TKM:Turkmenistan|UZB:Uzbekistan"],
+["Asia","Southern Asia","AFG:Afghanistan|BGD:Bangladesh|BTN:Bhutan|IND:India|IRN:Iran|MDV:Maldives|NPL:Nepal|PAK:Pakistan|LKA:Sri Lanka"],
+["Asia","Eastern Asia","CHN:China|HKG:Hong Kong|MAC:Macau|JPN:Japan|PRK:North Korea|KOR:South Korea|MNG:Mongolia|TWN:Taiwan"],
+["Asia","Southeast Asia","BRN:Brunei|KHM:Cambodia|IDN:Indonesia|LAO:Laos|MYS:Malaysia|MMR:Myanmar|PHL:Philippines|SGP:Singapore|THA:Thailand|TLS:Timor-Leste|VNM:Vietnam"],
+["Europe","Northern Europe","DNK:Denmark|EST:Estonia|FIN:Finland|ISL:Iceland|IRL:Ireland|LVA:Latvia|LTU:Lithuania|NOR:Norway|SWE:Sweden|GBR:United Kingdom"],
+["Europe","Western Europe","AUT:Austria|BEL:Belgium|FRA:France|DEU:Germany|LIE:Liechtenstein|LUX:Luxembourg|MCO:Monaco|NLD:Netherlands|CHE:Switzerland"],
+["Europe","Southern Europe","ALB:Albania|AND:Andorra|BIH:Bosnia and Herzegovina|HRV:Croatia|GRC:Greece|ITA:Italy|MLT:Malta|MNE:Montenegro|MKD:North Macedonia|PRT:Portugal|SMR:San Marino|SRB:Serbia|SVN:Slovenia|ESP:Spain|VAT:Vatican City|XKX:Kosovo"],
+["Europe","Eastern Europe","BLR:Belarus|BGR:Bulgaria|CZE:Czechia|HUN:Hungary|MDA:Moldova|POL:Poland|ROU:Romania|RUS:Russia|SVK:Slovakia|UKR:Ukraine"],
+["North America","Northern America","CAN:Canada|USA:United States|GRL:Greenland"],
+["North America","Central America","BLZ:Belize|CRI:Costa Rica|SLV:El Salvador|GTM:Guatemala|HND:Honduras|MEX:Mexico|NIC:Nicaragua|PAN:Panama"],
+["North America","Caribbean","ATG:Antigua and Barbuda|BHS:Bahamas|BRB:Barbados|CUB:Cuba|DMA:Dominica|DOM:Dominican Republic|GRD:Grenada|HTI:Haiti|JAM:Jamaica|KNA:Saint Kitts and Nevis|LCA:Saint Lucia|VCT:Saint Vincent and the Grenadines|TTO:Trinidad and Tobago|PRI:Puerto Rico"],
+["South America","South America","ARG:Argentina|BOL:Bolivia|BRA:Brazil|CHL:Chile|COL:Colombia|ECU:Ecuador|GUY:Guyana|PRY:Paraguay|PER:Peru|SUR:Suriname|URY:Uruguay|VEN:Venezuela"],
+["Oceania","Australia & New Zealand","AUS:Australia|NZL:New Zealand"],
+["Oceania","Melanesia","FJI:Fiji|PNG:Papua New Guinea|SLB:Solomon Islands|VUT:Vanuatu|NCL:New Caledonia"],
+["Oceania","Micronesia","FSM:Micronesia|KIR:Kiribati|MHL:Marshall Islands|NRU:Nauru|PLW:Palau"],
+["Oceania","Polynesia","WSM:Samoa|TON:Tonga|TUV:Tuvalu|PYF:French Polynesia"],
+["Antarctica","Antarctica","ATA:Antarctica"]
+];
+const TERRITORIES=["GRL","HKG","MAC","TWN","PRI","NCL","PYF","ESH","ATA","XKX"];
