@@ -1,0 +1,10 @@
+{
+  "name": "duckcellent",
+  "private": true,
+  "scripts": {
+    "dev": "serve . --listen 3000 --config vercel.json --no-clipboard"
+  },
+  "devDependencies": {
+    "serve": "^14.2.6"
+  }
+}
