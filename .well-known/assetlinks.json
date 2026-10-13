@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.duckcellent.twa",
+    "sha256_cert_fingerprints": ["6F:2F:A5:F1:C8:A1:EB:5D:70:2F:3A:CA:B9:D4:53:3D:23:12:A5:32:26:4C:9D:B9:5D:E9:62:A5:20:8D:08:22"]
+  }
+}]
