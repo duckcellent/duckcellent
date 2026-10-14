@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Delete your Duckcellent account</title>
+<meta name="description" content="How to delete your Duckcellent account, and what data is deleted or kept.">
+<meta name="theme-color" content="#EBF0EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E161A" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Same colours and type as the app (src/template_saas.html). */
+:root{
+  --bg:#EBF0EF; --surface:#FFFFFF; --surface2:#F4F7F6; --ink:#12222B; --muted:#566A72; --line:#D2DBD9;
+  --accent:#0B7A75; --accent-ink:#FFFFFF; --accent-soft:#D9EEEC; --danger:#B3261E;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E161A; --surface:#162228; --surface2:#1B2A31; --ink:#E6EEF0; --muted:#98ABB2; --line:#2B3C44;
+  --accent:#3CC7BB; --accent-ink:#06201E; --accent-soft:#16363A; --danger:#FF8A80}}
+:root[data-theme="dark"]{
+  --bg:#0E161A; --surface:#162228; --surface2:#1B2A31; --ink:#E6EEF0; --muted:#98ABB2; --line:#2B3C44;
+  --accent:#3CC7BB; --accent-ink:#06201E; --accent-soft:#16363A; --danger:#FF8A80}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);padding:0 16px 64px}
+.wrap{max-width:720px;margin-inline:auto}
+header{display:flex;align-items:center;gap:10px;padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:28px}
+header img{width:36px;height:36px}
+header a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.02em}
+h1,h2{font-family:var(--f-display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,6vw,38px);line-height:1.1}
+h2{font-size:21px;margin:36px 0 12px}
+p{margin:0 0 12px}
+.lead{color:var(--muted);font-size:17px;margin-top:10px}
+a{color:var(--accent);font-weight:600;text-underline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.steps{border:2px solid var(--accent);margin-top:24px}
+.steps h2{margin-top:0}
+ol{margin:0;padding-left:0;list-style:none;counter-reset:s}
+ol li{counter-increment:s;position:relative;padding:0 0 14px 44px}
+ol li:last-child{padding-bottom:0}
+ol li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:700;display:grid;place-items:center;font-size:15px}
+b.ui{font-weight:700;background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:0 6px;white-space:nowrap}
+.btn{display:inline-block;margin-top:16px;background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:10px 18px;text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.grid h3{font-family:var(--f-display);font-size:17px;margin:0 0 8px}
+ul{margin:0;padding-left:20px}
+ul li{margin-bottom:6px}
+.kept{border-left:4px solid var(--muted)}
+.gone{border-left:4px solid var(--danger)}
+.note{background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:15px}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><a href="/"><img src="/favicon.png" alt="">Duckcellent</a></header>
+
+  <main>
+    <h1>Delete your Duckcellent account</h1>
+    <p class="lead">You can delete your Duckcellent account and its data yourself at any time, in the Duckcellent app or on the Duckcellent website. It takes about a minute and does not need help from us.</p>
+
+    <section class="card steps" aria-labelledby="how">
+      <h2 id="how">How to delete your account</h2>
+      <ol>
+        <li>Open the Duckcellent app, or go to <a href="https://duckcellent.vercel.app">duckcellent.vercel.app</a> in any web browser. You do not need to install the app.</li>
+        <li>Tap <b class="ui">Sign in</b> in the top-right corner and sign in with the email and password you used for Duckcellent. Forgot your password? Tap <b class="ui">Forgot password?</b> to get a reset link by email.</li>
+        <li>Once signed in, tap <b class="ui">Account</b> in the top-right corner.</li>
+        <li>At the bottom of the <b>Your account</b> window, tap <b class="ui">Delete account</b>.</li>
+        <li>Type <b>DELETE</b> (in capital letters) in the box, then tap <b class="ui">Delete my account</b>.</li>
+      </ol>
+      <p style="margin:16px 0 0">A message confirms that your account has been deleted. This cannot be undone.</p>
+      <a class="btn" href="/">Go to Duckcellent to delete your account</a>
+    </section>
+
+    <h2>What is deleted, and what is kept</h2>
+    <div class="grid">
+      <section class="card gone" aria-labelledby="deleted">
+        <h3 id="deleted">Deleted straight away, for good</h3>
+        <ul>
+          <li>Your account: email address and password</li>
+          <li>Your atlas: the countries, states and cities you marked as been, lived or want to go, with any years and notes</li>
+          <li>Your trips: itineraries, flights, stays, booking references, costs and notes</li>
+          <li>Your Duckcellent Plus membership record</li>
+        </ul>
+        <p style="margin:12px 0 0">If you pay for Duckcellent Plus, the subscription is <b>cancelled immediately</b> before anything is deleted, so you are not charged again. Deleting your account does not refund the current billing period.</p>
+      </section>
+      <section class="card kept" aria-labelledby="kept">
+        <h3 id="kept">Kept for a limited time</h3>
+        <ul>
+          <li><b>Payment records</b> (only if you ever paid for Plus): your email, name and billing details, and the payments and invoices. These are held by our payment processor, Stripe, and kept for <b>5 years</b> from the payment, as Australian tax law requires. Stripe may keep them longer where its own legal obligations require it. Card numbers are held by Stripe only and never reach us.</li>
+          <li><b>Backups and system logs</b> may still contain your data for up to <b>7 days</b> before they are overwritten.</li>
+        </ul>
+      </section>
+    </div>
+
+    <h2>Data saved on your own device</h2>
+    <p>If you used Duckcellent without signing in, your atlas and trips are saved only in that browser or on that phone, and we never receive them. To remove them, uninstall the app, or clear the website data for duckcellent.vercel.app in your browser settings.</p>
+
+    <div class="note">Want to keep a copy first? Before deleting, tap <b>Account</b>, then <b>Download my data</b> to save your atlas and trips as a file.</div>
+  </main>
+
+  <footer>Duckcellent · Last updated 15 October 2026</footer>
+</div>
+</body>
+</html>
