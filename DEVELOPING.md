@@ -3,6 +3,11 @@
 `index.html` is generated. Edit `src/template_saas.html` (plus `src/countries.js`, `mapdata.js`, `airports.js`) and rebuild:
 
     python3 tools/build.py
+    powershell -ExecutionPolicy Bypass -File tools/build.ps1      # same thing on Windows without Python
+
+States and cities for the atlas live in `places-v1.json` (built from GeoNames data, CC BY 4.0). To rebuild it, see the
+instructions at the top of `tools/build_places.ps1`. If you change its contents, rename it (`places-v2.json`) in the script
+and in `src/template_saas.html`, because the service worker keeps the old file cached.
 
 The tests need no internet and no real accounts. They use stand-ins for Supabase and Stripe (`test/mock.js`):
 

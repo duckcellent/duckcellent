@@ -153,9 +153,38 @@ main{padding-top:20px}
 .chip.s-wish{border-style:dashed;border-color:var(--wish)}
 .chip.s-wish i{background:var(--wish)}
 .chip:hover{border-color:var(--ink)}
+.chip.k-state i{border-radius:2px;transform:rotate(45deg) scale(.85)}
+
+/* states and cities: pins on the map, place lists */
+.pin .pm{fill:var(--surface);stroke:var(--ink);stroke-width:1.4}
+.pin.s-been .pm{fill:var(--accent)}
+.pin.s-lived .pm{fill:var(--lived)}
+.pin.s-wish .pm{fill:var(--wish)}
+.pin.cand .pm{stroke-dasharray:2 1.6}
+.pin.on .pm{stroke-width:2.6}
+.pin .ph{fill:transparent}
+.pin .pc{fill:var(--surface);pointer-events:none}
+.pin.cand .pc{fill:var(--ink)}
+.pin{cursor:pointer}
+.shapek{display:inline-block;width:9px;height:9px;border:1.4px solid var(--ink);background:var(--surface)}
+.shapek.city{border-radius:50% 50% 50% 0;transform:rotate(-45deg) scale(.95)}
+.shapek.state{border-radius:1px;transform:rotate(45deg) scale(.85)}
+.legend .sep{color:var(--line)}
+.opt .kind{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+.opt.load{color:var(--muted);cursor:default;font-size:13px}
+.inplaces{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.inplaces .chips{padding-bottom:4px;margin-top:8px}
+.inplaces .combo{margin-top:10px;min-width:0}
+.inplaces details{margin-top:10px}
+.inplaces summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--accent)}
+.inplaces details .chips{max-height:220px;overflow:auto;padding:2px}
+.placegrp{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 16px 4px;margin-bottom:10px}
+.placegrp h4{margin:0 0 8px;font-size:13px;display:flex;gap:10px;justify-content:space-between;font-weight:600}
+.placegrp h4 span{font-family:var(--f-mono);font-weight:400;color:var(--muted)}
 
 /* country sheet */
 .sheet{position:fixed;z-index:40;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:420px;margin-inline:auto 0;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+.sheet{max-height:62vh;overflow-y:auto;overscroll-behavior:contain}
 @media (max-width:720px){.sheet{max-width:none;margin-inline:0}}
 .sheet-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
 .sheet h2{font-size:24px}
@@ -172,7 +201,7 @@ main{padding-top:20px}
 .atlasmain{min-width:0}
 @media (min-width:1000px){
   .atlasgrid.has-sheet{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start}
-  .atlasgrid.has-sheet .sheet{position:sticky;top:calc(84px + env(safe-area-inset-top,0px));left:auto;right:auto;bottom:auto;max-width:none;margin:18px 0 0;box-shadow:none}
+  .atlasgrid.has-sheet .sheet{position:sticky;top:calc(84px + env(safe-area-inset-top,0px));left:auto;right:auto;bottom:auto;max-width:none;margin:18px 0 0;box-shadow:none;max-height:calc(100vh - 110px)}
 }
 
 /* typed dates and airports */
@@ -309,7 +338,7 @@ dialog::backdrop{background:rgba(10,20,25,.55)}
     <div class="maptools">
       <div class="legend" id="legend"></div>
       <div class="combo">
-        <input id="countrySearch" type="text" role="combobox" aria-expanded="false" aria-controls="countryOpts" autocomplete="off" placeholder="Find or add a country" aria-label="Find or add a country">
+        <input id="countrySearch" type="text" role="combobox" aria-expanded="false" aria-controls="countryOpts" autocomplete="off" placeholder="Find a country, state or city" aria-label="Find a country, state or city">
         <div class="opts" id="countryOpts" role="listbox" hidden></div>
       </div>
     </div>
@@ -322,10 +351,12 @@ dialog::backdrop{background:rgba(10,20,25,.55)}
       </div>
       <div class="tip" id="tip" hidden></div>
     </div>
-    <p class="maphint">Drag to pan, scroll or pinch to zoom, then select a country. Small nations appear as dots, and everything is also listed below.</p>
+    <p class="maphint">Drag to pan, scroll or pinch to zoom, then select a country. Small nations appear as dots, and everything is also listed below. To pin a state or city, search for it above or open its country.</p>
 
     <div class="sectionhead"><h2>By continent and region</h2></div>
     <div id="continents"></div>
+    <div class="sectionhead"><h2>States and cities</h2><span class="muted" id="placesCount"></span></div>
+    <div id="places"></div>
     </div>
     <aside class="sheet" id="sheet" role="dialog" aria-labelledby="sheetTitle" hidden></aside>
     </div>
@@ -337,7 +368,7 @@ dialog::backdrop{background:rgba(10,20,25,.55)}
   <!-- MEMBERSHIP -->
   <section id="view-plans" aria-label="Membership" hidden></section>
 
-  <p class="foot">Country outlines are simplified public-domain data, so borders are approximate and disputed areas are not shown.</p>
+  <p class="foot">Country outlines are simplified public-domain data, so borders are approximate and disputed areas are not shown. State and city names and positions come from <a href="https://www.geonames.org/" target="_blank" rel="noopener">GeoNames</a> (CC BY 4.0); state pins mark a rough centre, not a border.</p>
 </main>
 <dialog id="dlg" aria-labelledby="dlgTitle"><div class="dlgbody" id="dlgBody"></div></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -995,8 +1026,10 @@ const SOV_TOTAL=Object.values(C).filter(c=>!c.terr).length;
 const ST={been:'Been',lived:'Lived here',wish:'Want to go'};
 
 /* ---------- state ---------- */
-let S={visited:{},trips:[],example:false};
-let ready=false, sel=null, sheetMsg=null, view='atlas';
+/* S.places: states and cities, keyed 'g<geonameid>' (city) or 's:<ISO3>:<name>' (state).
+   Each is {k:'city'|'state',c:ISO3,name,st:state name (cities),lat,lon,s,y,n} so pins draw without the place list. */
+let S={visited:{},places:{},trips:[],example:false};
+let ready=false, sel=null, psel=null, pcand=null, sheetMsg=null, view='atlas';
 const T={id:null,tab:'itinerary',editing:null,notice:false,confirmDel:false};
 const P={sel:'yearly',confirm:false,busy:false,err:'',after:null};
 const openConts=new Set();
@@ -1005,6 +1038,14 @@ function sample(){
   const v=(s,y,n)=>({s,y:y||null,n:n||''});
   return {
     visited:{AUS:v('lived'),NZL:v('been',2019),JPN:v('been',2018,'Kyoto in autumn'),THA:v('been',2017),SGP:v('been',2016),USA:v('been',2015),FRA:v('been',2022),ITA:v('been',2023),PRT:v('wish'),ISL:v('wish'),PER:v('wish'),NOR:v('wish')},
+    places:{
+      'g2147714':{k:'city',c:'AUS',name:'Sydney',st:'New South Wales',lat:-33.87,lon:151.21,s:'lived',y:null,n:''},
+      's:AUS:New South Wales':{k:'state',c:'AUS',name:'New South Wales',lat:-33.07,lon:150.7,s:'lived',y:null,n:''},
+      'g1857910':{k:'city',c:'JPN',name:'Kyoto',st:'Kyoto',lat:35.02,lon:135.75,s:'been',y:2018,n:'Autumn leaves'},
+      's:USA:California':{k:'state',c:'USA',name:'California',lat:36.36,lon:-119.82,s:'been',y:2015,n:''},
+      'g5128581':{k:'city',c:'USA',name:'New York City',st:'New York',lat:40.71,lon:-74.01,s:'wish',y:null,n:''},
+      'g3169070':{k:'city',c:'ITA',name:'Rome',st:'Lazio',lat:41.89,lon:12.51,s:'been',y:2023,n:''},
+      'g2267057':{k:'city',c:'PRT',name:'Lisbon',st:'Lisbon',lat:38.72,lon:-9.13,s:'wish',y:null,n:''}},
     example:true,
     trips:[{id:'ex1',name:'Portugal in spring',start:'2027-04-10',end:'2027-04-19',currency:'USD',countries:['PRT'],
       itinerary:[
@@ -1059,9 +1100,11 @@ function enqueue(fn){store.run++;store.chain=store.chain.then(fn).catch(e=>{cons
 function later(key,fn){setSave('saving');store.waiting.add(key);clearTimeout(store.timers[key]);store.timers[key]=setTimeout(()=>{store.waiting.delete(key);enqueue(fn);},500);}
 
 /* ----- shape of saved data ----- */
-const guestShape=()=>({visited:S.visited,trips:S.trips,example:S.example});
+const guestShape=()=>({visited:S.visited,places:S.places,trips:S.trips,example:S.example});
+const isObj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
 function normState(d){
-  const o={visited:(d&&d.visited&&typeof d.visited==='object'&&!Array.isArray(d.visited))?d.visited:{},example:!!(d&&d.example),trips:[]};
+  const o={visited:(d&&isObj(d.visited))?d.visited:{},places:{},example:!!(d&&d.example),trips:[]};
+  if(d&&isObj(d.places))for(const id in d.places){const p=d.places[id];if(isObj(p)&&p.name&&isFinite(p.lat)&&isFinite(p.lon)&&ST[p.s])o.places[id]=p;}
   for(const t of ((d&&d.trips)||[])){
     if(!t||!t.id)continue;
     const n=Object.assign({name:'',start:'',end:'',currency:'USD',countries:[],itinerary:[],flights:[],stays:[]},t);
@@ -1070,7 +1113,7 @@ function normState(d){
   }
   return o;
 }
-const hasContent=g=>!!g&&!g.example&&(Object.keys(g.visited).length>0||g.trips.length>0);
+const hasContent=g=>!!g&&!g.example&&(Object.keys(g.visited).length>0||Object.keys(g.places).length>0||g.trips.length>0);
 
 /* ----- guest mode: saved in this browser only ----- */
 function readGuest(){try{const raw=localStorage.getItem(KEY);return raw?normState(JSON.parse(raw)):null;}catch(e){return null;}}
@@ -1193,7 +1236,7 @@ let cacheT=null;
 const scheduleCache=()=>{clearTimeout(cacheT);cacheT=setTimeout(writeCacheNow,300);};
 function jobFor(key){
   if(key==='profile')return async()=>{
-    await sb('profiles?on_conflict=user_id',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{user_id:A.user.id,data:{visited:S.visited,example:S.example}}});
+    await sb('profiles?on_conflict=user_id',{method:'POST',prefer:'resolution=merge-duplicates,return=minimal',body:{user_id:A.user.id,data:{visited:S.visited,places:S.places,example:S.example}}});
   };
   if(key.startsWith('trip:')){const id=key.slice(5);return async()=>{
     const t=S.trips.find(x=>x.id===id);if(!t)return;
@@ -1267,7 +1310,7 @@ async function loadCloud(){
 }
 function fromCloud(c){
   const d=c.profile&&c.profile.data||{};
-  return normState({visited:d.visited,example:d.example,trips:c.trips.map(r=>Object.assign(clone(r.data||{}),{id:r.id}))});
+  return normState({visited:d.visited,places:d.places,example:d.example,trips:c.trips.map(r=>Object.assign(clone(r.data||{}),{id:r.id}))});
 }
 function summaryOf(row){
   if(!row)return {plus:false,plan:null,status:null,current_period_end:null,cancel_at_period_end:false,has_customer:false};
@@ -1288,6 +1331,7 @@ function mergeGuest(g){
     if((v.s==='been'||v.s==='lived')&&!isPlus()&&markedCount()>=FREE_COUNTRIES){skipped++;continue;}
     S.visited[id]=v;added++;
   }
+  for(const id of Object.keys(g.places)){if(!S.places[id]){S.places[id]=g.places[id];added++;}}
   for(const t of g.trips){
     if(S.trips.some(x=>x.id===t.id))continue;
     if(!isPlus()&&S.trips.length>=FREE_TRIPS){skipped++;continue;}
@@ -1313,7 +1357,7 @@ async function enterCloud(){
     if(e.code==='signed_out'){enterLocal();return;}
     console.warn('cloud load failed',e);
     if(cache){useCache(cache);SUB=cache.membership||SUB;setSave('offline');toast('You are offline. Showing your last saved copy.',6000);return;}
-    store.blocked=true;S={visited:{},trips:[],example:false};setSave('error');
+    store.blocked=true;S={visited:{},places:{},trips:[],example:false};setSave('error');
     toast('Could not load your data. Check your connection and reload the page.',10000);return;
   }
   if(cache&&cache.dirty&&cache.dirty.length){
@@ -1324,7 +1368,7 @@ async function enterCloud(){
     else if(g){
       S=g;S.example=false;markDirty('profile');S.trips.forEach(t=>markDirty('trip:'+t.id));
       clearGuest();toast('Your countries and trips from this device are now saved to your account.',7000);
-    }else S={visited:{},trips:[],example:false};
+    }else S={visited:{},places:{},trips:[],example:false};
   }
   writeCacheNow();
   if(row&&row.stripe_customer_id&&A.cfg.billing)syncMembership().then(()=>{writeCacheNow();renderChrome();renderPlans();}).catch(()=>{});
@@ -1465,7 +1509,7 @@ async function doSignOut(){
   toast('Signed out.');
 }
 function exportData(){
-  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),email:A.user&&A.user.email,atlas:S.visited,trips:S.trips},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),email:A.user&&A.user.email,atlas:S.visited,places:S.places,trips:S.trips},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='duckcellent-data.json';
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
 }
@@ -1508,8 +1552,12 @@ function renderStats(){
   $('#legend').innerHTML=
     `<span><i class="dotk been"></i>Been ${dash?'':nb}</span>
      <span><i class="dotk lived"></i>Lived here ${dash?'':nl}</span>
-     <span><i class="dotk wish"></i>Want to go ${dash?'':nw}</span>`;
+     <span><i class="dotk wish"></i>Want to go ${dash?'':nw}</span>
+     <span class="sep" aria-hidden="true">|</span>
+     <span><i class="shapek state"></i>States ${dash?'':placeCount('state')}</span>
+     <span><i class="shapek city"></i>Cities ${dash?'':placeCount('city')}</span>`;
 }
+const placeCount=k=>Object.values(S.places).filter(p=>p.k===k).length;
 
 /* ---------- map ---------- */
 const svg=$('#mapSvg'),wrap=$('#mapWrap'),tip=$('#tip');
@@ -1520,9 +1568,34 @@ function buildMap(){
   for(const id in MAP.shapes) h+=`<path class="c" data-id="${id}" d="${MAP.shapes[id]}"/>`;
   h+='</g><g id="gDots">';
   for(const id in MAP.dots){const p=MAP.dots[id];h+=`<g data-id="${id}"><circle class="hit" cx="${p[0]}" cy="${p[1]}" r="8"/><circle class="c dot" data-id="${id}" cx="${p[0]}" cy="${p[1]}" r="3"/></g>`;}
-  h+='</g></g>';
+  h+='</g><g id="gPins"></g></g>';
   svg.innerHTML=h;
   applyView();
+}
+/* Latitude/longitude to map units. The outlines use the Natural Earth projection; the scale and centre were fitted to them. */
+function proj(lat,lon){
+  const p=lat*Math.PI/180,l=lon*Math.PI/180,p2=p*p,p4=p2*p2,p6=p4*p2,p8=p4*p4,p10=p8*p2,p12=p6*p6;
+  return [499.95+182.07*l*(0.8707-0.131979*p2-0.013791*p4+0.003971*p10-0.001529*p12),
+          260.97-182.29*p*(1.007226+0.015085*p2-0.044475*p6+0.028874*p8-0.005916*p10)];
+}
+/* A city is a map pin whose tip sits on the spot; a state is a diamond centred on it. */
+const PIN_CITY='<circle class="ph" cy="-9" r="10"/><path class="pm" d="M0 0C-1.2-3.4-5.6-6.4-5.6-10.6a5.6 5.6 0 1 1 11.2 0C5.6-6.4 1.2-3.4 0 0Z"/><circle class="pc" cy="-10.6" r="1.9"/>';
+const PIN_STATE='<circle class="ph" r="11"/><rect class="pm" x="-4.6" y="-4.6" width="9.2" height="9.2" rx="1" transform="rotate(45)"/>';
+function renderPins(){
+  const g=$('#gPins');if(!g)return;
+  const list=Object.entries(S.places);
+  if(pcand&&!S.places[pcand.id])list.push([pcand.id,pcand]);
+  /* states under cities, the selected pin on top */
+  list.sort((a,b)=>(a[0]===psel)-(b[0]===psel)||(a[1].k==='city')-(b[1].k==='city'));
+  g.innerHTML=ready?list.map(([id,p])=>{
+    const [x,y]=proj(p.lat,p.lon);
+    return `<g class="pin${p.s?' s-'+p.s:' cand'}${id===psel?' on':''}" data-pid="${esc(id)}" data-x="${x.toFixed(1)}" data-y="${y.toFixed(1)}">${p.k==='state'?PIN_STATE:PIN_CITY}</g>`;
+  }).join(''):'';
+  scalePins();
+}
+function scalePins(){
+  const m=svg.getScreenCTM(),px=((m?m.a:1)*V.k)||1;
+  $$('#gPins .pin').forEach(p=>p.setAttribute('transform','translate('+p.getAttribute('data-x')+' '+p.getAttribute('data-y')+') scale('+(1/px)+')'));
 }
 function paintMap(){
   $$('#mapSvg .c').forEach(el=>{
@@ -1530,6 +1603,7 @@ function paintMap(){
     el.setAttribute('class','c'+(el.classList.contains('dot')?' dot':'')+(v?' s-'+v.s:'')+(id===sel?' sel':''));
   });
   const el=sel&&$('#gShapes [data-id="'+sel+'"]');if(el)el.parentNode.appendChild(el);
+  renderPins();
 }
 function applyView(){
   const g=$('#gView');if(!g)return;
@@ -1537,6 +1611,7 @@ function applyView(){
   const m=svg.getScreenCTM();const sc=m?m.a:1;
   const px=(sc*V.k)||1;
   $$('#gDots circle').forEach(c=>c.setAttribute('r',(c.classList.contains('hit')?11:4.5)/px));
+  scalePins();
 }
 function setView(k,x,y){
   k=Math.max(1,Math.min(14,k));
@@ -1555,6 +1630,10 @@ function focusCountry(id){
   const k=dot?5:Math.max(1.4,Math.min(7,Math.min(MAP.w/(b.width*2.4),MAP.h/(b.height*2.4))));
   const cx=b.x+b.width/2,cy=b.y+b.height/2;
   setView(k,MAP.w/2-cx*k,MAP.h/2-cy*k);
+}
+function focusPlace(p){
+  const [x,y]=proj(p.lat,p.lon),k=Math.max(V.k,p.k==='state'?4:6);
+  setView(k,MAP.w/2-x*k,MAP.h/2-y*k);
 }
 const pts=new Map();let drag=null,pinch=null,moved=false;
 wrap.addEventListener('pointerdown',e=>{
@@ -1592,8 +1671,10 @@ function endPtr(e){
   if(pts.size<2)pinch=null;
   if(pts.size===0){
     if(!moved&&e.type==='pointerup'){
-      const t=e.target.closest&&e.target.closest('[data-id]');
-      if(t&&wrap.contains(t))openSheet(t.getAttribute('data-id'),false);
+      const pin=e.target.closest&&e.target.closest('[data-pid]');
+      const t=!pin&&e.target.closest&&e.target.closest('[data-id]');
+      if(pin&&wrap.contains(pin))openPlace(pin.getAttribute('data-pid'),false);
+      else if(t&&wrap.contains(t))openSheet(t.getAttribute('data-id'),false);
     }
     wrap.classList.remove('grabbing');drag=null;
   }else if(pts.size===1){const p=[...pts.values()][0];drag={sx:p.x,sy:p.y,vx:V.x,vy:V.y};}
@@ -1603,11 +1684,18 @@ wrap.addEventListener('pointercancel',endPtr);
 wrap.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')tip.hidden=true;});
 wrap.addEventListener('wheel',e=>{e.preventDefault();zoomAt(Math.exp(-e.deltaY*0.0016),toVB(e.clientX,e.clientY));},{passive:false});
 function hover(e){
-  const t=e.target.closest&&e.target.closest('[data-id]');
+  const pin=e.target.closest&&e.target.closest('[data-pid]');
+  const t=pin||(e.target.closest&&e.target.closest('[data-id]'));
   if(!t||!ready){tip.hidden=true;return;}
-  const id=t.getAttribute('data-id'),c=C[id];if(!c){tip.hidden=true;return;}
-  const v=S.visited[id];
-  tip.textContent=c.name+(v?' · '+ST[v.s]:'');tip.hidden=false;
+  if(pin){
+    const p=getPlace(pin.getAttribute('data-pid'));if(!p){tip.hidden=true;return;}
+    tip.textContent=placeLabel(p)+(p.s?' · '+ST[p.s]:'');
+  }else{
+    const id=t.getAttribute('data-id'),c=C[id];if(!c){tip.hidden=true;return;}
+    const v=S.visited[id];
+    tip.textContent=c.name+(v?' · '+ST[v.s]:'');
+  }
+  tip.hidden=false;
   const r=wrap.getBoundingClientRect();
   let x=e.clientX-r.left+14,y=e.clientY-r.top+14;
   x=Math.min(x,r.width-tip.offsetWidth-6);y=Math.min(y,r.height-tip.offsetHeight-6);
@@ -1647,6 +1735,150 @@ function combo(input,list,onPick,filter){
   list.addEventListener('click',e=>{const b=e.target.closest('.opt[data-i]');if(b)pick(items[+b.getAttribute('data-i')]);});
 }
 
+/* ---------- states and cities ---------- */
+/* places-v1.json is about 1.3 MB (0.5 MB compressed), so it loads the first time someone searches or opens a country. */
+const PLACES_URL='/places-v1.json';
+let PL=null,plLoading=null,plFailed=false;
+function loadPlaces(){
+  if(PL)return Promise.resolve(PL);
+  if(plLoading)return plLoading;
+  plFailed=false;
+  plLoading=fetch(PLACES_URL).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(j=>{
+    const by={},all=[];
+    for(const cc in j.c){
+      if(!C[cc])continue;
+      const states=j.c[cc].s.map(([name,lat,lon,pop])=>({id:'s:'+cc+':'+name,k:'state',c:cc,name,lat,lon,nn:norm(name),pop}));
+      const cities=j.c[cc].p.map(([name,si,lat,lon,gid,pop])=>({id:'g'+gid,k:'city',c:cc,name,st:si>-1?states[si].name:'',lat,lon,nn:norm(name),pop}));
+      by[cc]={states,cities};all.push(...states,...cities);
+    }
+    PL={by,all};return PL;
+  }).catch(e=>{plFailed=true;throw e;}).finally(()=>{plLoading=null;});
+  return plLoading;
+}
+const getPlace=id=>S.places[id]||(pcand&&pcand.id===id?pcand:null);
+const placeLabel=p=>p.name+(p.k==='city'&&p.st&&p.st!==p.name?', '+p.st:'');
+const placeWhere=p=>(p.k==='state'?'State · ':'City · ')+(p.k==='city'&&p.st?p.st+', ':'')+(C[p.c]?C[p.c].name:p.c);
+const SUBDIV={USA:'states',AUS:'states',IND:'states',MEX:'states',BRA:'states',MYS:'states',NGA:'states',DEU:'states',AUT:'states',CAN:'provinces and territories',CHN:'provinces',ARG:'provinces',ZAF:'provinces',ESP:'communities',ITA:'regions',FRA:'regions',GBR:'nations',JPN:'prefectures',CHE:'cantons',IRL:'provinces'};
+const subdiv=cc=>SUBDIV[cc]||'states and provinces';
+
+/* Search countries, states and cities. With cc, only that country's states and cities. */
+function searchPlaces(q,cc){
+  q=norm(q).trim();if(!q)return [];
+  const sc=n=>n===q?100:n.startsWith(q)?80:n.split(/[ ,().'-]+/).some(w=>w.startsWith(q))?60:(q.length>2&&n.includes(q))?30:0;
+  const out=[];
+  if(!cc)for(const c of Object.values(C)){const s=sc(norm(c.name));if(s)out.push({s:s+5,kind:0,pop:0,item:{k:'country',id:c.id,name:c.name,c:c.id}});}
+  if(PL){
+    const list=cc?(PL.by[cc]?PL.by[cc].states.concat(PL.by[cc].cities):[]):PL.all;
+    for(const p of list){const s=sc(p.nn);if(s)out.push({s,kind:p.k==='state'?1:2,pop:p.pop,item:p});}
+  }
+  /* best match first (countries win ties), then bigger places first */
+  out.sort((a,b)=>b.s-a.s||b.pop-a.pop||a.kind-b.kind);
+  return out.slice(0,8).map(x=>x.item);
+}
+function placeCombo(input,list,cc){
+  let items=[],active=-1;
+  const close=()=>{list.hidden=true;active=-1;input.setAttribute('aria-expanded','false');};
+  const setActive=i=>{active=i;$$('.opt[data-i]',list).forEach((o,j)=>o.classList.toggle('on',j===i));};
+  function open(){
+    if(!input.value.trim()){close();return;}
+    if(!PL&&!plFailed)loadPlaces().then(()=>{if(document.activeElement===input)open();}).catch(()=>{if(document.activeElement===input)open();});
+    items=searchPlaces(input.value,cc);
+    let h=items.map((p,i)=>`<button type="button" role="option" class="opt" data-i="${i}"><span>${p.k!=='country'?`<span class="kind">${p.k}</span>`:''}${esc(p.name)}</span><small>${esc(p.k==='country'?C[p.id].reg:p.k==='city'?(p.st?p.st+(cc?'':', '+C[p.c].name):(cc?'':C[p.c].name)):(cc?'':C[p.c].name))}</small></button>`).join('');
+    if(!PL)h+=plFailed?'<div class="opt load">Could not load states and cities. Check your connection.</div>':'<div class="opt load">Loading states and cities…</div>';
+    else if(!items.length)h='<div class="opt none">No match</div>';
+    list.innerHTML=h;list.hidden=false;input.setAttribute('aria-expanded','true');setActive(items.length?0:-1);
+  }
+  function pick(p){
+    input.value='';close();
+    if(p.k==='country')openSheet(p.id,true);else openPlace(p.id,true,p);
+  }
+  input.addEventListener('input',open);
+  input.addEventListener('focus',()=>{if(!PL&&!plFailed)loadPlaces().catch(()=>{});});
+  input.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'){e.preventDefault();if(list.hidden)open();else setActive(Math.min(items.length-1,active+1));}
+    else if(e.key==='ArrowUp'){e.preventDefault();setActive(Math.max(0,active-1));}
+    else if(e.key==='Enter'){if(!list.hidden&&items[active]){e.preventDefault();pick(items[active]);}}
+    else if(e.key==='Escape'){if(!list.hidden){e.stopPropagation();close();}}
+  });
+  input.addEventListener('blur',()=>setTimeout(close,120));
+  list.addEventListener('mousedown',e=>e.preventDefault());
+  list.addEventListener('click',e=>{const b=e.target.closest('.opt[data-i]');if(b)pick(items[+b.getAttribute('data-i')]);});
+}
+
+/* A state or city sheet. rec is the search result when the place is not marked yet. */
+function openPlace(id,fly,rec){
+  const p=S.places[id]||rec||getPlace(id);if(!p)return;
+  if(!S.places[id])pcand={id,k:p.k,c:p.c,name:p.name,st:p.st||'',lat:p.lat,lon:p.lon};
+  else if(pcand&&pcand.id!==id)pcand=null;
+  sel=p.c;psel=id;sheetMsg=null;renderSheet();paintMap();
+  if(fly)focusPlace(p);
+  const b=$('#sheet .seg button');if(b&&fly!==false)b.focus({preventScroll:true});
+}
+function markPlace(s){
+  const p=getPlace(psel);if(!p)return;
+  const cur=S.places[psel];
+  sheetMsg=null;
+  if(!s){delete S.places[psel];pcand={id:psel,k:p.k,c:p.c,name:p.name,st:p.st||'',lat:p.lat,lon:p.lon};}
+  else{
+    S.places[psel]={k:p.k,c:p.c,name:p.name,st:p.st||'',lat:p.lat,lon:p.lon,s,y:cur?cur.y:null,n:cur?cur.n:''};
+    if(p.k==='city'&&!p.st)delete S.places[psel].st;
+    /* Been to a city means been to its country too. */
+    const cv=S.visited[p.c];
+    if(s==='wish'){if(!cv){S.visited[p.c]={s:'wish',y:null,n:''};sheetMsg={also:'wish'};}}
+    else if(!cv||cv.s==='wish'){
+      if(!isPlus()&&markedCount()>=FREE_COUNTRIES)sheetMsg={limit:1};
+      else{S.visited[p.c]={s:s==='lived'?'lived':'been',y:cv?cv.y:null,n:cv?cv.n:''};sheetMsg={also:S.visited[p.c].s};}
+    }
+  }
+  saveProfile();renderSheet();refreshAtlas();
+  const b=$('#sheet .seg button[aria-pressed="true"]');if(b)b.focus({preventScroll:true});
+}
+function placeSheetHTML(){
+  const p=getPlace(psel),c=C[p.c],s=p.s;
+  return `
+    <div class="sheet-head"><div><div class="eyebrow">${esc(placeWhere(p))}</div><h2 id="sheetTitle">${esc(p.name)}</h2></div><button class="x" data-act="closeSheet" aria-label="Close">&times;</button></div>
+    <div class="seg" role="group" aria-label="Status for ${esc(p.name)}">
+      <button class="been" data-act="pmark" data-s="been" aria-pressed="${s==='been'}">Been</button>
+      <button class="lived" data-act="pmark" data-s="lived" aria-pressed="${s==='lived'}">Lived</button>
+      <button class="wish" data-act="pmark" data-s="wish" aria-pressed="${s==='wish'}">Want to go</button>
+      <button data-act="pmark" data-s="" aria-pressed="${!s}">None</button>
+    </div>
+    ${sheetMsg&&sheetMsg.also?`<div class="notice">${esc(c.name)} is now marked <b>${esc(ST[sheetMsg.also])}</b> too.</div>`:''}
+    ${sheetMsg&&sheetMsg.limit?`<div class="notice">Saved. ${esc(c.name)} itself was not marked because the free plan holds ${FREE_COUNTRIES} countries. <button class="linkbtn" data-act="goPlans">See membership plans</button></div>`:''}
+    ${(s==='been'||s==='lived')?`<div class="grid">
+      <div class="field"><label for="py">${s==='been'?'Last visited (year)':'Year you moved'}</label><input id="py" type="number" min="1900" max="2100" inputmode="numeric" value="${p.y||''}" placeholder="2024"></div>
+      <div class="field wide"><label for="pn">Note</label><textarea id="pn" maxlength="300" placeholder="Favourite place, who you went with">${esc(p.n)}</textarea></div></div>`:''}
+    <p style="margin:14px 0 0"><button class="linkbtn" data-act="pick" data-id="${esc(p.c)}">${esc(c.name)}: see country</button></p>`;
+}
+/* The "states and cities" part of a country sheet. */
+function inPlacesHTML(cc){
+  const name=C[cc].name,pinned=Object.entries(S.places).filter(([,p])=>p.c===cc).sort((a,b)=>(a[1].k===b[1].k?0:a[1].k==='state'?-1:1)||a[1].name.localeCompare(b[1].name));
+  const sub=subdiv(cc),states=PL&&PL.by[cc]?PL.by[cc].states:null;
+  return `<div class="inplaces">
+    <div class="eyebrow">States and cities</div>
+    ${pinned.length?`<div class="chips">${pinned.map(([id,p])=>placeChip(id,p)).join('')}</div>`:'<p class="muted" style="font-size:13px;margin:6px 0 0">None pinned yet.</p>'}
+    <div class="combo"><input id="placeSearch" type="text" role="combobox" aria-expanded="false" aria-controls="placeOpts" autocomplete="off" placeholder="Add a state or city in ${esc(name)}" aria-label="Add a state or city in ${esc(name)}"><div class="opts" id="placeOpts" role="listbox" hidden></div></div>
+    <div id="stateList">${states?(states.length?`<details${openStates?' open':''}><summary>All ${states.length} ${esc(sub)}</summary><div class="chips">${states.map(st=>placeChip(st.id,S.places[st.id]||st)).join('')}</div></details>`:''):PL||plFailed?'':`<p class="muted" style="font-size:12px;margin:8px 0 0">Loading ${esc(sub)}…</p>`}</div>
+  </div>`;
+}
+let openStates=false;
+document.addEventListener('toggle',e=>{if(e.target.closest&&e.target.closest('#stateList'))openStates=e.target.open;},true);
+const placeChip=(id,p)=>`<button class="chip k-${p.k}${p.s?' s-'+p.s:''}" data-act="openPlace" data-pid="${esc(id)}"><i></i>${esc(p.name)}${p.k==='city'&&p.st&&p.st!==p.name?`<em>${esc(p.st)}</em>`:''}</button>`;
+function renderPlaces(){
+  const root=$('#places');if(!ready){root.innerHTML='';$('#placesCount').textContent='';return;}
+  const by={};
+  for(const [id,p] of Object.entries(S.places)){(by[p.c]=by[p.c]||[]).push([id,p]);}
+  const ccs=Object.keys(by).filter(cc=>C[cc]).sort((a,b)=>C[a].name.localeCompare(C[b].name));
+  const n=Object.keys(S.places).length;
+  $('#placesCount').textContent=n?n+' pinned':'';
+  if(!ccs.length){root.innerHTML='<div class="empty">Pin the states and cities you have been to, lived in or want to visit. Search above, or open a country on the map.</div>';return;}
+  root.innerHTML=ccs.map(cc=>{
+    const list=by[cc].sort((a,b)=>(a[1].k===b[1].k?0:a[1].k==='state'?-1:1)||a[1].name.localeCompare(b[1].name));
+    const nb=list.filter(([,p])=>p.s!=='wish').length;
+    return `<div class="placegrp"><h4><button class="linkbtn" style="color:var(--ink);text-decoration:none" data-act="pick" data-id="${cc}">${esc(C[cc].name)}</button><span>${nb} visited · ${list.length-nb} want to go</span></h4><div class="chips">${list.map(([id,p])=>placeChip(id,p)).join('')}</div></div>`;
+  }).join('');
+}
+
 /* ---------- continents ---------- */
 function renderContinents(){
   const root=$('#continents');if(!ready){root.innerHTML='';return;}
@@ -1668,19 +1900,31 @@ $('#continents').addEventListener('toggle',e=>{const d=e.target;if(d.matches&&d.
 
 /* ---------- country sheet ---------- */
 function openSheet(id,fly){
-  sel=id;sheetMsg=null;renderSheet();paintMap();
+  if(sel!==id)openStates=false;
+  sel=id;psel=null;pcand=null;sheetMsg=null;renderSheet();paintMap();
   if(fly)focusCountry(id);
   const b=$('#sheet .seg button');if(b&&fly!==false)b.focus({preventScroll:true});
+  if(!PL&&!plFailed)loadPlaces().then(refreshStateList,refreshStateList);
 }
-function closeSheet(){sel=null;sheetMsg=null;renderSheet();paintMap();}
+/* The place list arrived: fill in the country sheet's states without disturbing someone typing in it. */
+function refreshStateList(){
+  if(!sel||psel)return;
+  const box=$('#stateList');
+  if(box&&document.activeElement&&document.activeElement.id==='placeSearch'){
+    const tmp=document.createElement('div');tmp.innerHTML=inPlacesHTML(sel);box.replaceWith($('#stateList',tmp));
+  }else renderSheet();
+}
+function closeSheet(){sel=null;psel=null;pcand=null;sheetMsg=null;renderSheet();paintMap();}
 function renderSheet(){
   const sh=$('#sheet');
   const grid=$('#atlasGrid');
+  if(psel&&!getPlace(psel))psel=null;
   if(!sel||!ready){sh.hidden=true;sh.innerHTML='';grid.classList.remove('has-sheet');return;}
   grid.classList.add('has-sheet');
+  sh.hidden=false;
+  if(psel){sh.innerHTML=placeSheetHTML();return;}
   const c=C[sel],v=S.visited[sel],s=v&&v.s;
   const onMap=!!(MAP.shapes[sel]||MAP.dots[sel]);
-  sh.hidden=false;
   sh.innerHTML=`
     <div class="sheet-head"><div><div class="eyebrow">${esc(c.reg)} · ${esc(c.cont)}${c.terr?' · Territory':''}</div><h2 id="sheetTitle">${esc(c.name)}</h2></div><button class="x" data-act="closeSheet" aria-label="Close">&times;</button></div>
     <div class="seg" role="group" aria-label="Status for ${esc(c.name)}">
@@ -1693,7 +1937,9 @@ function renderSheet(){
     ${(s==='been'||s==='lived')?`<div class="grid">
       <div class="field"><label for="sy">${s==='been'?'Last visited (year)':'Year you moved'}</label><input id="sy" type="number" min="1900" max="2100" inputmode="numeric" value="${v.y||''}" placeholder="2024"></div>
       <div class="field wide"><label for="sn">Note</label><textarea id="sn" maxlength="300" placeholder="Favourite place, who you went with">${esc(v.n)}</textarea></div></div>`:''}
-    ${onMap?'':'<p class="muted" style="font-size:12px;margin:12px 0 0">No outline on the map for this one, but it still counts.</p>'}`;
+    ${onMap?'':'<p class="muted" style="font-size:12px;margin:12px 0 0">No outline on the map for this one, but it still counts.</p>'}
+    ${inPlacesHTML(sel)}`;
+  placeCombo($('#placeSearch'),$('#placeOpts'),sel);
 }
 function mark(s){
   if(!sel)return;
@@ -1709,8 +1955,10 @@ function mark(s){
 document.addEventListener('input',e=>{
   if(e.target.id==='sy'&&sel&&S.visited[sel]){const n=parseInt(e.target.value,10);S.visited[sel].y=isNaN(n)?null:n;saveProfile();}
   if(e.target.id==='sn'&&sel&&S.visited[sel]){S.visited[sel].n=e.target.value;saveProfile();}
+  if(e.target.id==='py'&&psel&&S.places[psel]){const n=parseInt(e.target.value,10);S.places[psel].y=isNaN(n)?null:n;saveProfile();}
+  if(e.target.id==='pn'&&psel&&S.places[psel]){S.places[psel].n=e.target.value;saveProfile();}
 });
-function refreshAtlas(){renderStats();paintMap();renderContinents();}
+function refreshAtlas(){renderStats();paintMap();renderContinents();renderPlaces();}
 
 /* ---------- banner / plan badge ---------- */
 function renderChrome(){
@@ -2020,8 +2268,10 @@ document.addEventListener('click',e=>{
     case 'pick':openSheet(id,true);break;
     case 'closeSheet':closeSheet();break;
     case 'mark':mark(el.getAttribute('data-s'));break;
+    case 'pmark':markPlace(el.getAttribute('data-s'));break;
+    case 'openPlace':openPlace(el.getAttribute('data-pid'),true,PL&&PL.all.find(p=>p.id===el.getAttribute('data-pid')));break;
     case 'clearExample':
-      S.visited={};const old=S.trips.map(x=>x.id);S.trips=[];S.example=false;T.id=null;
+      S.visited={};S.places={};pcand=null;const old=S.trips.map(x=>x.id);S.trips=[];S.example=false;T.id=null;
       saveProfile();old.forEach(removeTripDoc);refreshAtlas();renderChrome();renderTrips();closeSheet();break;
     case 'newTrip':
       if(!isPlus()&&S.trips.length>=FREE_TRIPS){T.notice=true;renderTrips();break;}
@@ -2144,7 +2394,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 buildMap();
-combo($('#countrySearch'),$('#countryOpts'),id=>openSheet(id,true));
+placeCombo($('#countrySearch'),$('#countryOpts'),null);
 renderStats();renderChrome();setSave('idle');
 (async function boot(){
   await loadConfig();
