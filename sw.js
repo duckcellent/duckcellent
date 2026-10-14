@@ -1,6 +1,6 @@
 // Duckcellent service worker: lets the app open offline once it has been loaded.
 // It never touches /api/ calls, sign-in traffic or payments: those always go straight to the network.
-const CACHE = 'duckcellent-v2';
+const CACHE = 'duckcellent-v3'; // bump when icons or other cached files change, so devices fetch the new ones
 const SHELL = ['/', '/favicon.png', '/apple-touch-icon.png', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest'];
 
 self.addEventListener('install', e => {
