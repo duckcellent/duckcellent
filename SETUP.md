@@ -101,7 +101,7 @@ Open `https://YOUR-SITE/api/health`. Everything should read `true`, and `stripe_
 ## Changing prices and limits
 
 - **Prices and plan names**: edit `lib/plans.js`. The website and Stripe checkout both read it. Existing members keep the price they pay until they switch plans.
-- **Currency**: set the `PLAN_CURRENCY` environment variable (for example `aud`).
+- **Currency**: prices are in Australian dollars (AUD) unless the `PLAN_CURRENCY` environment variable says otherwise (for example `usd`). Members who already subscribed in another currency keep paying in it, including when they switch plans, because Stripe cannot change a running subscription's currency.
 - **Free limits (10 countries, 1 trip)**: change `FREE` in `lib/plans.js` **and** the numbers `10` and `1` inside `enforce_profile_limit` and `enforce_trip_limit` in `supabase/schema.sql`, then run the changed functions again in the SQL Editor. The first controls what people see, the second is what really enforces it.
 
 ## What is where

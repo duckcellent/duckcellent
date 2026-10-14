@@ -28,7 +28,7 @@ async function changeOrResume(user, row, plan) {
   let updated;
   try {
     updated = await stripe('POST', '/subscriptions/' + sub.id, {
-      items: [{ id: item.id, price_data: priceData(plan, product) }],
+      items: [{ id: item.id, price_data: priceData(plan, product, item.price && item.price.currency) }],
       proration_behavior: 'create_prorations',
       payment_behavior: 'error_if_incomplete',
       cancel_at_period_end: false,

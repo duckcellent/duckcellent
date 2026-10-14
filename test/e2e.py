@@ -99,7 +99,7 @@ with sync_playwright() as pw:
     # ---------- subscribe through (mock) Stripe Checkout ----------
     page.click('.plan[data-id=quarterly]'); page.click('[data-act=subscribe]')
     page.wait_for_url(re.compile(r'localhost:4010/__pay/'),timeout=8000)
-    assert '1299 usd every 3 month' in page.inner_text('#amt'); ok('subscribe: sent to Stripe Checkout with the right price')
+    assert '1299 aud every 3 month' in page.inner_text('#amt'); ok('subscribe: sent to Stripe Checkout with the right price')
     page.click('#pay'); page.wait_for_url(re.compile(r'localhost:3000/'),timeout=8000); ready(page)
     until(lambda:badge(page)=='Plus · Every 3 months','Plus badge after checkout',12)
     assert 'Renews on' in page.inner_text('#view-plans'); assert 'checkout' not in page.url; ok('subscribe: returned from checkout, Plus active, URL tidied')

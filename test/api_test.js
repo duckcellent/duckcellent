@@ -75,8 +75,8 @@ const sign = (body, t) => { t = t || Math.floor(Date.now() / 1000); return 't=' 
   assert.strictEqual(row.status, 'active'); assert.strictEqual(row.plan, 'quarterly'); assert.strictEqual(row.cancel_at_period_end, false);
   assert.ok(new Date(row.current_period_end) > new Date(Date.now() + 80 * 864e5)); ok('webhook activated the membership (plan, status, renewal date)');
   const created = st.stripeSubs[0];
-  assert.strictEqual(created.items.data[0].price.unit_amount, 1299); assert.strictEqual(created.items.data[0].price.currency, 'usd');
-  assert.deepStrictEqual(created.items.data[0].price.recurring, { interval: 'month', interval_count: 3 }); assert.strictEqual(created.metadata.user_id, uid); ok('Stripe charged the server-side price (1299 usd / 3 months), not anything the browser sent');
+  assert.strictEqual(created.items.data[0].price.unit_amount, 1299); assert.strictEqual(created.items.data[0].price.currency, 'aud');
+  assert.deepStrictEqual(created.items.data[0].price.recurring, { interval: 'month', interval_count: 3 }); assert.strictEqual(created.metadata.user_id, uid); ok('Stripe charged the server-side price (1299 aud / 3 months), not anything the browser sent');
 
   /* ---- change plan, same plan, resume ---- */
   r = await api('checkout', tk, { plan: 'quarterly' }); assert.strictEqual(r.status, 409); ok('choosing your current plan is refused');
