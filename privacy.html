@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Duckcellent Privacy Policy</title>
+<meta name="description" content="What personal information Duckcellent collects, how it is used and stored, and your choices.">
+<meta name="theme-color" content="#EBF0EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E161A" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Same colours and type as the app (src/template_saas.html) and delete-account.html. */
+:root{
+  --bg:#EBF0EF; --surface:#FFFFFF; --surface2:#F4F7F6; --ink:#12222B; --muted:#566A72; --line:#D2DBD9;
+  --accent:#0B7A75; --accent-ink:#FFFFFF; --accent-soft:#D9EEEC;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E161A; --surface:#162228; --surface2:#1B2A31; --ink:#E6EEF0; --muted:#98ABB2; --line:#2B3C44;
+  --accent:#3CC7BB; --accent-ink:#06201E; --accent-soft:#16363A}}
+:root[data-theme="dark"]{
+  --bg:#0E161A; --surface:#162228; --surface2:#1B2A31; --ink:#E6EEF0; --muted:#98ABB2; --line:#2B3C44;
+  --accent:#3CC7BB; --accent-ink:#06201E; --accent-soft:#16363A}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--f-body);padding:0 16px 64px}
+.wrap{max-width:720px;margin-inline:auto}
+header{display:flex;align-items:center;gap:10px;padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:28px}
+header img{width:36px;height:36px}
+header a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.02em}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,6vw,38px);line-height:1.1}
+h2{font-size:21px;margin:36px 0 10px}
+h3{font-size:16px;margin:18px 0 6px}
+p{margin:0 0 12px}
+ul{margin:0 0 12px;padding-left:20px}
+li{margin-bottom:6px}
+a{color:var(--accent);font-weight:600;text-underline-offset:2px;overflow-wrap:anywhere}
+.lead{color:var(--muted);font-size:17px;margin-top:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-top:22px}
+.card ul{margin:0}
+.toc{columns:2 220px;column-gap:24px;margin:0;padding-left:20px}
+.scroll{overflow-x:auto;margin:0 0 12px}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:15px}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{background:var(--surface2);font-weight:600}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><a href="/"><img src="/favicon.png" alt="">Duckcellent</a></header>
+
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="lead">This policy explains what personal information the Duckcellent app and website collect, why, who helps us handle it, and the choices you have. In short: we collect only what we need to run your account, we never sell your data, and there are no ads or tracking.</p>
+    <p class="muted" style="color:var(--muted);font-size:14px">Effective 15 October 2026</p>
+
+    <div class="card">
+      <p style="margin:0 0 6px"><b>Who we are.</b> Duckcellent (ABN 90 683 209 293), Australia. "We", "us" and "our" mean Duckcellent. This policy covers the Duckcellent website at <a href="https://duckcellent.vercel.app">duckcellent.vercel.app</a> and the Duckcellent app on Google Play.</p>
+      <p style="margin:0"><b>Contact.</b> <a href="mailto:admin.duckcellent@gmail.com">admin.duckcellent@gmail.com</a></p>
+    </div>
+
+    <h2>Contents</h2>
+    <ol class="toc">
+      <li><a href="#collect">What we collect</a></li>
+      <li><a href="#use">How we use it</a></li>
+      <li><a href="#providers">Who helps us</a></li>
+      <li><a href="#overseas">Storage outside Australia</a></li>
+      <li><a href="#device">Data on your device</a></li>
+      <li><a href="#keep">How long we keep it</a></li>
+      <li><a href="#choices">Your choices and rights</a></li>
+      <li><a href="#security">Security</a></li>
+      <li><a href="#children">Children</a></li>
+      <li><a href="#changes">Changes and complaints</a></li>
+    </ol>
+
+    <h2 id="collect">1. What we collect</h2>
+    <p>You can use Duckcellent without an account. In that case your atlas and trips stay on your device and we receive none of them (see <a href="#device">section 5</a>). If you create an account, we collect:</p>
+    <div class="scroll"><table>
+      <thead><tr><th scope="col">Information</th><th scope="col">Details</th></tr></thead>
+      <tbody>
+        <tr><td>Account details</td><td>Your email address and password. Passwords are stored only in scrambled (hashed) form, so we cannot read them.</td></tr>
+        <tr><td>Your atlas</td><td>The countries, states and cities you mark as been, lived in or want to go, with any years and notes you add. State and city pins use the approximate centre of that place, never your device's location.</td></tr>
+        <tr><td>Your trips</td><td>Trip names and dates, itineraries, flights, stays, booking references, costs and notes you enter.</td></tr>
+        <tr><td>Membership and payments</td><td>If you subscribe to Duckcellent Plus: your plan, its status and renewal date. Your card details, name and billing address are entered on and kept by our payment processor, Stripe. Card numbers never reach us.</td></tr>
+        <tr><td>Technical information</td><td>Like any website, our hosting and database providers briefly record technical details of requests, such as IP address, browser or device type and time, to deliver the service and keep it secure.</td></tr>
+      </tbody>
+    </table></div>
+    <p>We do not use your device's location (GPS), contacts, photos, camera, microphone or messages. We do not use analytics, advertising or tracking tools, and we do not build profiles about you.</p>
+
+    <h2 id="use">2. How we use it</h2>
+    <ul>
+      <li>To provide the app: saving your atlas and trips to your account and showing them on any device you sign in on.</li>
+      <li>To manage your account: sign-in, email confirmation, password reset and account deletion.</li>
+      <li>To process your Duckcellent Plus subscription: payments, renewals, plan changes and cancellations.</li>
+      <li>To keep the service secure and working, and to meet our legal obligations such as tax record keeping.</li>
+    </ul>
+    <p>We only email you about your account (for example confirmation and password reset emails) and, if you subscribe, receipts and billing notices from Stripe. We do not send marketing emails.</p>
+    <p>We <b>do not sell</b> your personal information, and we do not share it with anyone for their own advertising or marketing.</p>
+
+    <h2 id="providers">3. Who helps us</h2>
+    <p>We use these service providers. They handle your information only to provide their service to us, under their own privacy and security commitments:</p>
+    <ul>
+      <li><b>Supabase</b>: account sign-in and the database that stores your atlas, trips and membership status. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase privacy policy</a></li>
+      <li><b>Stripe</b>: subscription payments. Stripe receives your email and the payment details you enter at checkout. <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe privacy policy</a></li>
+      <li><b>Vercel</b>: hosts the website and the app's server functions. <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel privacy policy</a></li>
+      <li><b>Google Fonts</b>: supplies the fonts the app displays, so your browser contacts Google to download them, which shares your IP address and browser details with Google. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google privacy policy</a></li>
+    </ul>
+    <p>We may also disclose information if the law requires it, for example in response to a valid court order.</p>
+
+    <h2 id="overseas">4. Storage outside Australia</h2>
+    <p>Our service providers operate internationally, so your information may be stored or processed outside Australia, including in the United States and other countries where they or their partners run servers. We choose providers that protect personal information with industry-standard security, including encryption.</p>
+
+    <h2 id="device">5. Data on your device</h2>
+    <p>The app saves information in your browser or phone's local storage so it can work, including offline: your atlas and trips (when you are not signed in), a copy of your account data (when you are), and your sign-in session. This stays on your device; it is not a tracking cookie and we do not read it unless you sign in and save. To remove it, sign out, uninstall the app, or clear the site data for duckcellent.vercel.app in your browser.</p>
+
+    <h2 id="keep">6. How long we keep it</h2>
+    <ul>
+      <li><b>Account, atlas and trips</b>: until you delete your account. They are then deleted straight away.</li>
+      <li><b>Payment records</b> (only if you ever paid): kept by Stripe for 5 years from the payment, as Australian tax law requires. Stripe may keep them longer where its own legal obligations require.</li>
+      <li><b>Backups and system logs</b>: up to 7 days.</li>
+    </ul>
+
+    <h2 id="choices">7. Your choices and rights</h2>
+    <ul>
+      <li><b>Access and correct</b>: you can see and edit everything in your atlas and trips in the app at any time. To download a copy, sign in and choose <b>Account</b>, then <b>Download my data</b>.</li>
+      <li><b>Delete</b>: you can delete your account and data yourself. See <a href="/delete-account">how to delete your account</a>.</li>
+      <li><b>Ask us</b>: for any other request about your personal information, email <a href="mailto:admin.duckcellent@gmail.com">admin.duckcellent@gmail.com</a>. We will reply within 30 days.</li>
+    </ul>
+
+    <h2 id="security">8. Security</h2>
+    <p>All information travels over encrypted connections (HTTPS). Account data is stored with our database provider under access rules that let each person reach only their own data. Payment card details are handled only by Stripe, which is certified to the payment industry's security standard (PCI DSS). No system is perfectly secure, but if a data breach is likely to cause you serious harm, we will tell you and, where required, the Office of the Australian Information Commissioner.</p>
+
+    <h2 id="children">9. Children</h2>
+    <p>Duckcellent is not directed at children under 13, and we do not knowingly collect personal information from them. If you believe a child has given us personal information, email us and we will delete it.</p>
+
+    <h2 id="changes">10. Changes and complaints</h2>
+    <p>If we change this policy, we will update the date at the top of this page, and tell you in the app or by email if the change is significant.</p>
+    <p>If you have a concern about how we handle your personal information, email <a href="mailto:admin.duckcellent@gmail.com">admin.duckcellent@gmail.com</a> and we will respond within 30 days. If you are not satisfied, you can contact the Office of the Australian Information Commissioner at <a href="https://www.oaic.gov.au" target="_blank" rel="noopener">oaic.gov.au</a>.</p>
+  </main>
+
+  <footer>Duckcellent · ABN 90 683 209 293 · <a href="/delete-account">Delete your account</a></footer>
+</div>
+</body>
+</html>
